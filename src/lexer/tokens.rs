@@ -12,7 +12,6 @@ pub enum Token {
     LT,
     GT,
 
-
     Comma,
     Semicolon,
 
@@ -22,7 +21,7 @@ pub enum Token {
     RBrace,
 
     Identifier(String),
-    Int(usize),
+    Int(String),
 
     // keywords
     Let,
@@ -35,4 +34,3 @@ pub enum Token {
 
     Eof,
 }
-

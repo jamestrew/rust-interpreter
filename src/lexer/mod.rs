@@ -49,16 +49,15 @@ impl<'a> Lexer<'a> {
         }
 
         let token = match self.ch {
-            b'=' => self.get_assign_or_eq(),
+            b'=' => self.if_peek(b'=', Token::Equal, Token::Assign),
             b'+' => Token::Plus,
             b'-' => Token::Minus,
             b'*' => Token::Asterisk,
             b'/' => Token::ForwardSlash,
-            b'!' => self.get_bang_or_not_eq(),
+            b'!' => self.if_peek(b'=', Token::NotEqual, Token::Bang),
 
             b'<' => Token::LT,
             b'>' => Token::GT,
-
 
             b',' => Token::Comma,
             b';' => Token::Semicolon,
@@ -84,10 +83,7 @@ impl<'a> Lexer<'a> {
     }
 
     fn is_letter(&self) -> bool {
-        match self.ch {
-            b'a'..=b'z' | b'A'..=b'Z' | b'_' => true,
-            _ => false,
-        }
+        matches!(self.ch, b'a'..=b'z' | b'A'..=b'Z' | b'_' )
     }
 
     fn get_ident_or_kw(&mut self) -> Token {
@@ -118,10 +114,17 @@ impl<'a> Lexer<'a> {
             self.read_char();
         }
 
-        let int = self.input[start..self.position]
-            .iter()
-            .fold(0, |acc, &digit| acc * 10 + (digit - b'0') as usize);
-        Token::Int(int)
+        let val = String::from_utf8_lossy(&self.input[start..self.position]).to_string();
+        Token::Int(val)
+    }
+
+    fn if_peek(&mut self, peek: u8, true_token: Token, false_token: Token) -> Token {
+        if self.peek() == peek {
+            self.read_char();
+            true_token
+        } else {
+            false_token
+        }
     }
 
     fn get_assign_or_eq(&mut self) -> Token {
@@ -194,18 +197,18 @@ mod test {
         10 != 9;
         "#;
 
-        let mut lex = Lexer::new(input.into());
+        let mut lex = Lexer::new(input);
 
         let tokens = vec![
             Token::Let,
             Token::Identifier(String::from("five")),
             Token::Assign,
-            Token::Int(5),
+            Token::Int(String::from("5")),
             Token::Semicolon,
             Token::Let,
             Token::Identifier(String::from("ten")),
             Token::Assign,
-            Token::Int(10),
+            Token::Int(String::from("10")),
             Token::Semicolon,
             Token::Let,
             Token::Identifier(String::from("add")),
@@ -237,19 +240,19 @@ mod test {
             Token::Minus,
             Token::ForwardSlash,
             Token::Asterisk,
-            Token::Int(5),
+            Token::Int(String::from("5")),
             Token::Semicolon,
-            Token::Int(5),
+            Token::Int(String::from("5")),
             Token::LT,
-            Token::Int(10),
+            Token::Int(String::from("10")),
             Token::GT,
-            Token::Int(5),
+            Token::Int(String::from("5")),
             Token::Semicolon,
             Token::If,
             Token::LParen,
-            Token::Int(5),
+            Token::Int(String::from("5")),
             Token::LT,
-            Token::Int(10),
+            Token::Int(String::from("10")),
             Token::RParen,
             Token::LBrace,
             Token::Return,
@@ -262,13 +265,13 @@ mod test {
             Token::False,
             Token::Semicolon,
             Token::RBrace,
-            Token::Int(10),
+            Token::Int(String::from("10")),
             Token::Equal,
-            Token::Int(10),
+            Token::Int(String::from("10")),
             Token::Semicolon,
-            Token::Int(10),
+            Token::Int(String::from("10")),
             Token::NotEqual,
-            Token::Int(9),
+            Token::Int(String::from("9")),
             Token::Semicolon,
             Token::Eof,
         ];
@@ -278,6 +281,6 @@ mod test {
             assert_eq!(token, next_token);
         }
 
-        return Ok(());
+        Ok(())
     }
 }
