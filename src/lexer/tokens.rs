@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq)]
-pub enum Token {
+pub enum Token<'a> {
     Assign,
     Plus,
     Minus,
@@ -19,9 +19,12 @@ pub enum Token {
     RParen,
     LBrace,
     RBrace,
+    LBracket,
+    RBracket,
 
-    Identifier(String),
-    Int(String),
+    Identifier(&'a str),
+    Int(&'a str),
+    Str(&'a str),
 
     // keywords
     Let,

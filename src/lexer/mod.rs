@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 mod tokens;
 
+use std::str::{from_utf8, Utf8Error};
+
 use thiserror::Error;
 use tokens::Token;
 
@@ -8,6 +10,9 @@ use tokens::Token;
 enum TokenizerError {
     #[error("Unexpected input {0}. Failed to tokenize.")]
     UnexpectedInput(char),
+
+    #[error("Invalid non UTF-8 string found: {0}")]
+    NonUTF8Input(Utf8Error),
 }
 
 type Result<T> = std::result::Result<T, TokenizerError>;
@@ -45,7 +50,7 @@ impl<'a> Lexer<'a> {
         self.skip_whitespace();
 
         if self.is_letter() {
-            return Ok(self.get_ident_or_kw());
+            return self.get_ident_or_kw();
         }
 
         let token = match self.ch {
@@ -67,7 +72,8 @@ impl<'a> Lexer<'a> {
             b'{' => Token::LBrace,
             b'}' => Token::RBrace,
 
-            b'0'..=b'9' => return Ok(self.get_int()),
+            b'0'..=b'9' => return self.get_int(),
+            b'"' => return self.get_str(),
 
             0 => Token::Eof,
             _ => return Err(TokenizerError::UnexpectedInput(self.ch as char)),
@@ -86,9 +92,9 @@ impl<'a> Lexer<'a> {
         matches!(self.ch, b'a'..=b'z' | b'A'..=b'Z' | b'_' )
     }
 
-    fn get_ident_or_kw(&mut self) -> Token {
-        let ident = self.read_ident();
-        match ident.as_str() {
+    fn get_ident_or_kw(&mut self) -> Result<Token> {
+        let ident = self.read_ident()?;
+        Ok(match ident {
             "let" => Token::Let,
             "fn" => Token::Function,
             "if" => Token::If,
@@ -97,51 +103,50 @@ impl<'a> Lexer<'a> {
             "false" => Token::False,
             "return" => Token::Return,
             _ => Token::Identifier(ident),
-        }
+        })
     }
 
-    fn read_ident(&mut self) -> String {
+    fn read_ident(&mut self) -> Result<&'a str> {
         let start = self.position;
         while self.is_letter() {
             self.read_char()
         }
-        String::from_utf8_lossy(&self.input[start..self.position]).to_string()
+        from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)
     }
 
-    fn get_int(&mut self) -> Token {
+    fn get_int(&mut self) -> Result<Token> {
         let start = self.position;
         while self.ch.is_ascii_digit() {
             self.read_char();
         }
 
-        let val = String::from_utf8_lossy(&self.input[start..self.position]).to_string();
-        Token::Int(val)
+        let val =
+            from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)?;
+        Ok(Token::Int(val))
     }
 
-    fn if_peek(&mut self, peek: u8, true_token: Token, false_token: Token) -> Token {
+    fn get_str(&mut self) -> Result<Token> {
+        self.read_char();
+        let start = self.position;
+        while self.ch != b'"' {
+            self.read_char();
+        }
+        let val =
+            from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)?;
+        Ok(Token::Str(val))
+    }
+
+    fn if_peek<'t>(
+        &mut self,
+        peek: u8,
+        true_token: Token<'t>,
+        false_token: Token<'t>,
+    ) -> Token<'t> {
         if self.peek() == peek {
             self.read_char();
             true_token
         } else {
             false_token
-        }
-    }
-
-    fn get_assign_or_eq(&mut self) -> Token {
-        if self.peek() == b'=' {
-            self.read_char();
-            Token::Equal
-        } else {
-            Token::Assign
-        }
-    }
-
-    fn get_bang_or_not_eq(&mut self) -> Token {
-        if self.peek() == b'=' {
-            self.read_char();
-            Token::NotEqual
-        } else {
-            Token::Bang
         }
     }
 
@@ -201,58 +206,58 @@ mod test {
 
         let tokens = vec![
             Token::Let,
-            Token::Identifier(String::from("five")),
+            Token::Identifier("five"),
             Token::Assign,
-            Token::Int(String::from("5")),
+            Token::Int("5"),
             Token::Semicolon,
             Token::Let,
-            Token::Identifier(String::from("ten")),
+            Token::Identifier("ten"),
             Token::Assign,
-            Token::Int(String::from("10")),
+            Token::Int("10"),
             Token::Semicolon,
             Token::Let,
-            Token::Identifier(String::from("add")),
+            Token::Identifier("add"),
             Token::Assign,
             Token::Function,
             Token::LParen,
-            Token::Identifier(String::from("x")),
+            Token::Identifier("x"),
             Token::Comma,
-            Token::Identifier(String::from("y")),
+            Token::Identifier("y"),
             Token::RParen,
             Token::LBrace,
-            Token::Identifier(String::from("x")),
+            Token::Identifier("x"),
             Token::Plus,
-            Token::Identifier(String::from("y")),
+            Token::Identifier("y"),
             Token::Semicolon,
             Token::RBrace,
             Token::Semicolon,
             Token::Let,
-            Token::Identifier(String::from("result")),
+            Token::Identifier("result"),
             Token::Assign,
-            Token::Identifier(String::from("add")),
+            Token::Identifier("add"),
             Token::LParen,
-            Token::Identifier(String::from("five")),
+            Token::Identifier("five"),
             Token::Comma,
-            Token::Identifier(String::from("ten")),
+            Token::Identifier("ten"),
             Token::RParen,
             Token::Semicolon,
             Token::Bang,
             Token::Minus,
             Token::ForwardSlash,
             Token::Asterisk,
-            Token::Int(String::from("5")),
+            Token::Int("5"),
             Token::Semicolon,
-            Token::Int(String::from("5")),
+            Token::Int("5"),
             Token::LT,
-            Token::Int(String::from("10")),
+            Token::Int("10"),
             Token::GT,
-            Token::Int(String::from("5")),
+            Token::Int("5"),
             Token::Semicolon,
             Token::If,
             Token::LParen,
-            Token::Int(String::from("5")),
+            Token::Int("5"),
             Token::LT,
-            Token::Int(String::from("10")),
+            Token::Int("10"),
             Token::RParen,
             Token::LBrace,
             Token::Return,
@@ -265,13 +270,13 @@ mod test {
             Token::False,
             Token::Semicolon,
             Token::RBrace,
-            Token::Int(String::from("10")),
+            Token::Int("10"),
             Token::Equal,
-            Token::Int(String::from("10")),
+            Token::Int("10"),
             Token::Semicolon,
-            Token::Int(String::from("10")),
+            Token::Int("10"),
             Token::NotEqual,
-            Token::Int(String::from("9")),
+            Token::Int("9"),
             Token::Semicolon,
             Token::Eof,
         ];
