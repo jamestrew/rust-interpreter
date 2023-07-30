@@ -66,11 +66,14 @@ impl<'a> Lexer<'a> {
 
             b',' => Token::Comma,
             b';' => Token::Semicolon,
+            b':' => Token::Colon,
 
             b'(' => Token::LParen,
             b')' => Token::RParen,
             b'{' => Token::LBrace,
             b'}' => Token::RBrace,
+            b'[' => Token::LBracket,
+            b']' => Token::RBracket,
 
             b'0'..=b'9' => return self.get_int(),
             b'"' => return self.get_str(),
@@ -133,6 +136,7 @@ impl<'a> Lexer<'a> {
         }
         let val =
             from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)?;
+        self.read_char();
         Ok(Token::Str(val))
     }
 
@@ -196,7 +200,7 @@ mod test {
     }
 
     #[test]
-    fn get_next_complete() -> Result<()> {
+    fn get_next_complete() {
         let input = r#"let five = 5;
             let ten = 10;
             let add = fn(x, y) {
@@ -213,11 +217,16 @@ mod test {
 
         10 == 10;
         10 != 9;
+
+        "hello world";
+        [1, 2];
+        { "foo": "bar" };
         "#;
 
-        let mut lex = Lexer::new(input);
+        let lex = Lexer::new(input);
+        let tokens = lex.collect::<Vec<_>>();
 
-        let tokens = vec![
+        let expected = vec![
             Token::Let,
             Token::Identifier("five"),
             Token::Assign,
@@ -291,14 +300,36 @@ mod test {
             Token::NotEqual,
             Token::Int("9"),
             Token::Semicolon,
+            Token::Str("hello world"),
+            Token::Semicolon,
+            Token::LBracket,
+            Token::Int("1"),
+            Token::Comma,
+            Token::Int("2"),
+            Token::RBracket,
+            Token::Semicolon,
+            Token::LBrace,
+            Token::Str("foo"),
+            Token::Colon,
+            Token::Str("bar"),
+            Token::RBrace,
+            Token::Semicolon,
             Token::Eof,
         ];
 
-        for token in tokens {
-            let next_token = lex.next_token()?;
-            assert_eq!(token, next_token);
-        }
+        assert_eq!(expected, tokens);
+    }
 
-        Ok(())
+    #[test]
+    fn test_string() {
+        let input = r#"
+        "hello";
+        "#;
+        let lexer = Lexer::new(input);
+
+        let expected = vec![Token::Str("hello"), Token::Semicolon, Token::Eof];
+
+        let tokens = lexer.collect::<Vec<_>>();
+        assert_eq!(expected, tokens);
     }
 }
