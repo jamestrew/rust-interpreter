@@ -46,7 +46,7 @@ impl<'a> Lexer<'a> {
         self.read_position += 1;
     }
 
-    fn next_token(&mut self) -> Result<Token> {
+    fn next_token(&mut self) -> Result<Token<'a>> {
         self.skip_whitespace();
 
         if self.is_letter() {
@@ -92,7 +92,7 @@ impl<'a> Lexer<'a> {
         matches!(self.ch, b'a'..=b'z' | b'A'..=b'Z' | b'_' )
     }
 
-    fn get_ident_or_kw(&mut self) -> Result<Token> {
+    fn get_ident_or_kw(&mut self) -> Result<Token<'a>> {
         let ident = self.read_ident()?;
         Ok(match ident {
             "let" => Token::Let,
@@ -114,7 +114,7 @@ impl<'a> Lexer<'a> {
         from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)
     }
 
-    fn get_int(&mut self) -> Result<Token> {
+    fn get_int(&mut self) -> Result<Token<'a>> {
         let start = self.position;
         while self.ch.is_ascii_digit() {
             self.read_char();
@@ -125,7 +125,7 @@ impl<'a> Lexer<'a> {
         Ok(Token::Int(val))
     }
 
-    fn get_str(&mut self) -> Result<Token> {
+    fn get_str(&mut self) -> Result<Token<'a>> {
         self.read_char();
         let start = self.position;
         while self.ch != b'"' {
@@ -152,6 +152,19 @@ impl<'a> Lexer<'a> {
 
     fn peek(&self) -> u8 {
         self.input[self.read_position]
+    }
+}
+
+impl<'a> Iterator for Lexer<'a> {
+    type Item = Token<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let token = self.next_token().ok()?;
+        if token == Token::Eof && self.position - 1 > self.input.len() {
+            None
+        } else {
+            Some(token)
+        }
     }
 }
 
