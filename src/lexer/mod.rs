@@ -1,10 +1,9 @@
-#![allow(dead_code)]
 mod tokens;
 
 use std::str::{from_utf8, Utf8Error};
 
 use thiserror::Error;
-use tokens::Token;
+pub use tokens::Token;
 
 #[derive(Error, Debug)]
 enum TokenizerError {
