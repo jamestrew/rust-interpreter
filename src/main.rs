@@ -3,7 +3,7 @@ use std::io::{self, BufReader, Stdin, Stdout};
 
 use rust_interpreter::lexer::Lexer;
 
-const PROMPT: &'static str = ">> ";
+const PROMPT: &str = ">> ";
 
 fn main() -> io::Result<()> {
     println!("Time to monkey around");
