@@ -71,11 +71,13 @@ mod test {
 
     #[test]
     fn let_statement() {
-        let input = "
+        let input = r#"
         let x = 5;
         let y = 10;
         let foobar = 838383;
-        ";
+        let foo = "bar";
+        let fool = true;
+        "#;
 
         let mut lexer = Lexer::new(input);
         let mut parser = Parser::new(&mut lexer);
@@ -84,9 +86,12 @@ mod test {
         let expected = let_statement![
             ("x", Expression::Primative, Primative::Int, 5),
             ("y", Expression::Primative, Primative::Int, 10),
-            ("foobar", Expression::Primative, Primative::Int, 838383)
+            ("foobar", Expression::Primative, Primative::Int, 838383),
+            ("foo", Expression::StringLiteral, std::rc::Rc::from, "bar"),
+            ("fool", Expression::Primative, Primative::Bool, true)
         ];
 
+        assert_eq!(program.statements.len(), expected.len());
         assert_eq!(program.statements, expected);
     }
 }

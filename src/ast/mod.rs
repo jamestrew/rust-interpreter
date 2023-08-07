@@ -9,7 +9,9 @@ use crate::parser::Parser;
 pub trait Node {
     // fn get_token(&self) -> Option<&Token<'a>>;
 
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self> where Self: std::marker::Sized;
+    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    where
+        Self: std::marker::Sized;
 }
 
 #[derive(Debug, Default, PartialEq)]

@@ -8,6 +8,7 @@ use super::Node;
 pub enum Expression {
     Identifier(Identifier),
     Primative(Primative),
+    StringLiteral(Rc<str>),
 }
 
 impl Node for Expression {
@@ -17,8 +18,11 @@ impl Node for Expression {
     {
         let token = parser.current_token_unwrap()?;
         match token {
-            Token::Int(_) => Ok(Expression::Primative(Primative::parse(parser)?)),
-            _ => todo!()
+            Token::Int(_) | Token::True | Token::False => {
+                Ok(Expression::Primative(Primative::parse(parser)?))
+            }
+            Token::Str(s) => Ok(Expression::StringLiteral(s.clone())),
+            _ => todo!("Expression::parse for {:?}", token),
         }
     }
 }
@@ -62,11 +66,19 @@ pub enum Primative {
 }
 
 impl Node for Primative {
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self> where Self: std::marker::Sized {
+    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    where
+        Self: std::marker::Sized,
+    {
         let token = parser.current_token_unwrap()?;
         match token {
             Token::Int(val) => Ok(Self::Int(val.parse::<i64>()?)),
-            _ => todo!("Primative parse")
+            Token::True => Ok(Self::Bool(true)),
+            Token::False => Ok(Self::Bool(false)),
+            _ => unreachable!("Primative parse unexpected {:?}", token),
         }
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub struct StringLiteral {}
