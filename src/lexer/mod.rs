@@ -16,17 +16,17 @@ enum TokenizerError {
 
 type Result<T> = std::result::Result<T, TokenizerError>;
 
-pub struct Lexer<'a> {
-    input: &'a [u8],
+pub struct Lexer {
+    input: Vec<u8>,
     position: usize,
     read_position: usize,
     ch: u8,
 }
 
-impl<'a> Lexer<'a> {
-    pub fn new(input: &'a str) -> Self {
+impl Lexer {
+    pub fn new(input: &str) -> Self {
         let mut lexer = Self {
-            input: input.as_bytes(),
+            input: input.as_bytes().to_vec(),
             position: 0,
             read_position: 0,
             ch: 0,
@@ -45,7 +45,7 @@ impl<'a> Lexer<'a> {
         self.read_position += 1;
     }
 
-    fn next_token(&mut self) -> Result<Token<'a>> {
+    fn next_token(&mut self) -> Result<Token> {
         self.skip_whitespace();
 
         if self.is_letter() {
@@ -94,7 +94,7 @@ impl<'a> Lexer<'a> {
         matches!(self.ch, b'a'..=b'z' | b'A'..=b'Z' | b'_' )
     }
 
-    fn get_ident_or_kw(&mut self) -> Result<Token<'a>> {
+    fn get_ident_or_kw(&mut self) -> Result<Token> {
         let ident = self.read_ident()?;
         Ok(match ident {
             "let" => Token::Let,
@@ -104,11 +104,11 @@ impl<'a> Lexer<'a> {
             "true" => Token::True,
             "false" => Token::False,
             "return" => Token::Return,
-            _ => Token::Identifier(ident),
+            _ => Token::Identifier(ident.into()),
         })
     }
 
-    fn read_ident(&mut self) -> Result<&'a str> {
+    fn read_ident(&mut self) -> Result<&str> {
         let start = self.position;
         while self.is_letter() {
             self.read_char()
@@ -116,7 +116,7 @@ impl<'a> Lexer<'a> {
         from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)
     }
 
-    fn get_int(&mut self) -> Result<Token<'a>> {
+    fn get_int(&mut self) -> Result<Token> {
         let start = self.position;
         while self.ch.is_ascii_digit() {
             self.read_char();
@@ -124,10 +124,10 @@ impl<'a> Lexer<'a> {
 
         let val =
             from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)?;
-        Ok(Token::Int(val))
+        Ok(Token::Int(val.into()))
     }
 
-    fn get_str(&mut self) -> Result<Token<'a>> {
+    fn get_str(&mut self) -> Result<Token> {
         self.read_char();
         let start = self.position;
         while self.ch != b'"' {
@@ -135,16 +135,12 @@ impl<'a> Lexer<'a> {
         }
         let val =
             from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)?;
+        let ret = Token::Str(val.into());
         self.read_char();
-        Ok(Token::Str(val))
+        Ok(ret)
     }
 
-    fn if_peek<'t>(
-        &mut self,
-        peek: u8,
-        true_token: Token<'t>,
-        false_token: Token<'t>,
-    ) -> Token<'t> {
+    fn if_peek(&mut self, peek: u8, true_token: Token, false_token: Token) -> Token {
         if self.peek() == peek {
             self.read_char();
             true_token
@@ -158,8 +154,8 @@ impl<'a> Lexer<'a> {
     }
 }
 
-impl<'a> Iterator for Lexer<'a> {
-    type Item = Token<'a>;
+impl Iterator for Lexer {
+    type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
         let token = self.next_token().ok()?;
@@ -227,58 +223,58 @@ mod test {
 
         let expected = vec![
             Token::Let,
-            Token::Identifier("five"),
+            Token::Identifier("five".into()),
             Token::Assign,
-            Token::Int("5"),
+            Token::Int("5".into()),
             Token::Semicolon,
             Token::Let,
-            Token::Identifier("ten"),
+            Token::Identifier("ten".into()),
             Token::Assign,
-            Token::Int("10"),
+            Token::Int("10".into()),
             Token::Semicolon,
             Token::Let,
-            Token::Identifier("add"),
+            Token::Identifier("add".into()),
             Token::Assign,
             Token::Function,
             Token::LParen,
-            Token::Identifier("x"),
+            Token::Identifier("x".into()),
             Token::Comma,
-            Token::Identifier("y"),
+            Token::Identifier("y".into()),
             Token::RParen,
             Token::LBrace,
-            Token::Identifier("x"),
+            Token::Identifier("x".into()),
             Token::Plus,
-            Token::Identifier("y"),
+            Token::Identifier("y".into()),
             Token::Semicolon,
             Token::RBrace,
             Token::Semicolon,
             Token::Let,
-            Token::Identifier("result"),
+            Token::Identifier("result".into()),
             Token::Assign,
-            Token::Identifier("add"),
+            Token::Identifier("add".into()),
             Token::LParen,
-            Token::Identifier("five"),
+            Token::Identifier("five".into()),
             Token::Comma,
-            Token::Identifier("ten"),
+            Token::Identifier("ten".into()),
             Token::RParen,
             Token::Semicolon,
             Token::Bang,
             Token::Minus,
             Token::ForwardSlash,
             Token::Asterisk,
-            Token::Int("5"),
+            Token::Int("5".into()),
             Token::Semicolon,
-            Token::Int("5"),
+            Token::Int("5".into()),
             Token::LT,
-            Token::Int("10"),
+            Token::Int("10".into()),
             Token::GT,
-            Token::Int("5"),
+            Token::Int("5".into()),
             Token::Semicolon,
             Token::If,
             Token::LParen,
-            Token::Int("5"),
+            Token::Int("5".into()),
             Token::LT,
-            Token::Int("10"),
+            Token::Int("10".into()),
             Token::RParen,
             Token::LBrace,
             Token::Return,
@@ -291,26 +287,26 @@ mod test {
             Token::False,
             Token::Semicolon,
             Token::RBrace,
-            Token::Int("10"),
+            Token::Int("10".into()),
             Token::Equal,
-            Token::Int("10"),
+            Token::Int("10".into()),
             Token::Semicolon,
-            Token::Int("10"),
+            Token::Int("10".into()),
             Token::NotEqual,
-            Token::Int("9"),
+            Token::Int("9".into()),
             Token::Semicolon,
-            Token::Str("hello world"),
+            Token::Str("hello world".into()),
             Token::Semicolon,
             Token::LBracket,
-            Token::Int("1"),
+            Token::Int("1".into()),
             Token::Comma,
-            Token::Int("2"),
+            Token::Int("2".into()),
             Token::RBracket,
             Token::Semicolon,
             Token::LBrace,
-            Token::Str("foo"),
+            Token::Str("foo".into()),
             Token::Colon,
-            Token::Str("bar"),
+            Token::Str("bar".into()),
             Token::RBrace,
             Token::Semicolon,
             Token::Eof,
@@ -326,7 +322,7 @@ mod test {
         "#;
         let lexer = Lexer::new(input);
 
-        let expected = vec![Token::Str("hello"), Token::Semicolon, Token::Eof];
+        let expected = vec![Token::Str("hello".into()), Token::Semicolon, Token::Eof];
 
         let tokens = lexer.collect::<Vec<_>>();
         assert_eq!(expected, tokens);

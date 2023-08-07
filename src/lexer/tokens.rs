@@ -1,5 +1,7 @@
-#[derive(Debug, PartialEq)]
-pub enum Token<'a> {
+use std::rc::Rc;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Token {
     Assign,
     Plus,
     Minus,
@@ -23,9 +25,9 @@ pub enum Token<'a> {
     LBracket,
     RBracket,
 
-    Identifier(&'a str),
-    Int(&'a str),
-    Str(&'a str),
+    Identifier(Rc<str>),
+    Int(Rc<str>),
+    Str(Rc<str>),
 
     // keywords
     Let,
