@@ -1,24 +1,20 @@
 mod expression;
 mod statement;
 
-pub use statement::{Let, Statement};
+pub use expression::*;
+pub use statement::*;
 
-// pub trait Node<'a> {
-//     fn get_token(&self) -> Option<&Token<'a>>;
-//
-//     fn parse() -> Self;
-// }
+use crate::parser::Parser;
 
-pub struct Program<'a> {
-    pub statements: Vec<Statement<'a>>,
+pub trait Node {
+    // fn get_token(&self) -> Option<&Token<'a>>;
+
+    fn parse(parser: &mut Parser) -> anyhow::Result<Self> where Self: std::marker::Sized;
 }
 
-impl<'a> Program<'a> {
-    pub fn new() -> Self {
-        Program {
-            statements: Vec::new(),
-        }
-    }
+#[derive(Debug, Default, PartialEq)]
+pub struct Program {
+    pub statements: Vec<Statement>,
 }
 
 // impl<'a> Node<'a> for Program<'a> {

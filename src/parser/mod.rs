@@ -1,31 +1,33 @@
-use crate::ast::{Let, Program, Statement};
+use crate::ast::{Let, Node, Program, Statement};
 use crate::lexer::{Lexer, Token};
 
 pub struct Parser<'a> {
-    lexer: &'a mut Lexer<'a>,
-    current_token: Option<Token<'a>>,
-    peek_token: Option<Token<'a>>,
+    lexer: &'a mut Lexer,
+    current_token: Option<Token>,
+    peek_token: Option<Token>,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(lexer: &'a mut Lexer<'a>) -> Self {
+    pub fn new(lexer: &'a mut Lexer) -> Self {
+        let current_token = lexer.next();
+        let peek_token = lexer.next();
         Self {
             lexer,
-            current_token: None,
-            peek_token: None,
+            current_token,
+            peek_token,
         }
     }
 
-    pub fn parse_programe(&mut self) -> anyhow::Result<Program<'a>> {
-        let mut program = Program::new();
+    pub fn parse_programe(&mut self) -> anyhow::Result<Program> {
+        let mut program = Program::default();
         while !self.current_token_is(Token::Eof) {
-            program.statements.push(self.parse_statement()?);
+            program.statements.push(self.parse_node()?);
             self.next_token();
         }
         Ok(program)
     }
 
-    fn current_token_is(&self, match_token: Token<'a>) -> bool {
+    pub fn current_token_is(&self, match_token: Token) -> bool {
         if let Some(token) = &self.current_token {
             *token == match_token
         } else {
@@ -33,39 +35,30 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_statement(&mut self) -> anyhow::Result<Statement<'a>> {
+    fn parse_node(&mut self) -> anyhow::Result<Statement> {
+        let token = self.current_token_unwrap()?;
+        match token {
+            Token::Let => Ok(Statement::Let(Let::parse(self)?)),
+            _ => todo!("unexpected token {:?}", token),
+        }
+    }
+
+    pub fn current_token_unwrap(&self) -> anyhow::Result<&Token> {
         if self.current_token.is_none() {
             return Err(anyhow::anyhow!("No current token"));
         }
-
-        let token = &self.current_token.as_ref().unwrap();
-        match token {
-            Token::Let => Ok(Statement::Let(Let::try_from(self)?)),
-            _ => todo!(),
-        }
+        Ok(self.current_token.as_ref().unwrap())
     }
 
-    fn next_token(&mut self) {
+    pub fn peek_token_wrap(&self) -> anyhow::Result<&Token> {
+        if self.peek_token.is_none() {
+            return Err(anyhow::anyhow!("No peek token"));
+        }
+        Ok(self.peek_token.as_ref().unwrap())
+    }
+
+    pub fn next_token(&mut self) {
         self.current_token = self.peek_token.take();
         self.peek_token = self.lexer.next();
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::lexer::Lexer;
-
-    #[test]
-    fn let_statement() {
-        let input = "
-        let x = 5;
-        let y = 10;
-        let foobar = 838383;
-        ";
-
-        let mut lexer = Lexer::new(input);
-        let mut parser = Parser::new(&mut lexer);
-        let program = parser.parse_programe().expect("valid program");
     }
 }
