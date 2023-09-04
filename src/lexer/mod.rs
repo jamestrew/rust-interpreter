@@ -169,7 +169,8 @@ impl Iterator for Lexer {
 
 #[cfg(test)]
 mod test {
-    use super::{tokens::Token, *};
+    use super::tokens::Token;
+    use super::*;
 
     fn lex(input: &str) -> Vec<Token> {
         let lexer = Lexer::new(input);
