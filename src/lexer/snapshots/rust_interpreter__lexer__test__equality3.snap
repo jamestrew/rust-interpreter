@@ -1,0 +1,18 @@
+---
+source: src/lexer/mod.rs
+expression: "(\"10 != 9;\", tokens)"
+---
+(
+    "10 != 9;",
+    [
+        Int(
+            "10",
+        ),
+        NotEqual,
+        Int(
+            "9",
+        ),
+        Semicolon,
+        Eof,
+    ],
+)

@@ -1,0 +1,18 @@
+---
+source: src/lexer/mod.rs
+expression: "(\"10 == 10;\", tokens)"
+---
+(
+    "10 == 10;",
+    [
+        Int(
+            "10",
+        ),
+        Equal,
+        Int(
+            "10",
+        ),
+        Semicolon,
+        Eof,
+    ],
+)

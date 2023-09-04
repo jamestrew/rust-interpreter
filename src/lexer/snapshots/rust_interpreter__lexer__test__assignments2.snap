@@ -1,0 +1,19 @@
+---
+source: src/lexer/mod.rs
+expression: "(\"let ten = 10;\", tokens)"
+---
+(
+    "let ten = 10;",
+    [
+        Let,
+        Identifier(
+            "ten",
+        ),
+        Assign,
+        Int(
+            "10",
+        ),
+        Semicolon,
+        Eof,
+    ],
+)

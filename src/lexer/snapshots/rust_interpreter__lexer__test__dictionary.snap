@@ -1,0 +1,20 @@
+---
+source: src/lexer/mod.rs
+expression: "(r#\"{ \"foo\": \"bar\" };\"#, tokens)"
+---
+(
+    "{ \"foo\": \"bar\" };",
+    [
+        LBrace,
+        Str(
+            "foo",
+        ),
+        Colon,
+        Str(
+            "bar",
+        ),
+        RBrace,
+        Semicolon,
+        Eof,
+    ],
+)

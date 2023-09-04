@@ -1,0 +1,19 @@
+---
+source: src/lexer/mod.rs
+expression: "(\"[1, 2]\", tokens)"
+---
+(
+    "[1, 2]",
+    [
+        LBracket,
+        Int(
+            "1",
+        ),
+        Comma,
+        Int(
+            "2",
+        ),
+        RBracket,
+        Eof,
+    ],
+)
