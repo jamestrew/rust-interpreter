@@ -79,8 +79,8 @@ mod test {
         let fool = true;
         "#;
 
-        let mut lexer = Lexer::new(input);
-        let mut parser = Parser::new(&mut lexer);
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
         let program = parser.parse_programe().expect("valid program");
 
         let expected = let_statement![

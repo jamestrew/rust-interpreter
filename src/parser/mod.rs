@@ -1,14 +1,14 @@
 use crate::ast::{Let, Node, Program, Statement};
 use crate::lexer::{Lexer, Token};
 
-pub struct Parser<'a> {
-    lexer: &'a mut Lexer,
+pub struct Parser {
+    lexer: Lexer,
     current_token: Option<Token>,
     peek_token: Option<Token>,
 }
 
-impl<'a> Parser<'a> {
-    pub fn new(lexer: &'a mut Lexer) -> Self {
+impl Parser {
+    pub fn new(mut lexer: Lexer) -> Self {
         let current_token = lexer.next();
         let peek_token = lexer.next();
         Self {
