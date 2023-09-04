@@ -1,0 +1,5 @@
+---
+source: src/ast/statement.rs
+expression: "\"let y = 10;\""
+---
+let y = 10;

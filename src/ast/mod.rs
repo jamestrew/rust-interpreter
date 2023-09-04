@@ -6,9 +6,7 @@ pub use statement::*;
 
 use crate::parser::Parser;
 
-pub trait Node {
-    // fn get_token(&self) -> Option<&Token<'a>>;
-
+pub trait Node: std::fmt::Display {
     fn parse(parser: &mut Parser) -> anyhow::Result<Self>
     where
         Self: std::marker::Sized;
