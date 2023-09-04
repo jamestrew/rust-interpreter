@@ -1,0 +1,22 @@
+---
+source: src/lexer/mod.rs
+expression: "(\"5 < 10 > 5;\", tokens)"
+---
+(
+    "5 < 10 > 5;",
+    [
+        Int(
+            "5",
+        ),
+        LT,
+        Int(
+            "10",
+        ),
+        GT,
+        Int(
+            "5",
+        ),
+        Semicolon,
+        Eof,
+    ],
+)

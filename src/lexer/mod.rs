@@ -171,160 +171,47 @@ impl Iterator for Lexer {
 mod test {
     use super::{tokens::Token, *};
 
-    #[test]
-    fn next_token() -> Result<()> {
-        let input = "=+(){},;";
-        let mut lexer = Lexer::new(input);
-
-        let tokens = vec![
-            Token::Assign,
-            Token::Plus,
-            Token::LParen,
-            Token::RParen,
-            Token::LBrace,
-            Token::RBrace,
-            Token::Comma,
-            Token::Semicolon,
-            Token::Eof,
-        ];
-
-        for token in tokens {
-            assert_eq!(token, lexer.next_token()?);
-        }
-        Ok(())
-    }
-
-    #[test]
-    fn get_next_complete() {
-        let input = r#"let five = 5;
-            let ten = 10;
-            let add = fn(x, y) {
-                x + y;
-            };
-            let result = add(five, ten);
-        !-/*5;
-        5 < 10 > 5;
-        if (5 < 10) {
-            return true;
-        } else {
-            return false;
-        }
-
-        10 == 10;
-        10 != 9;
-
-        "hello world";
-        [1, 2];
-        { "foo": "bar" };
-        "#;
-
-        let lex = Lexer::new(input);
-        let tokens = lex.collect::<Vec<_>>();
-
-        let expected = vec![
-            Token::Let,
-            Token::Identifier("five".into()),
-            Token::Assign,
-            Token::Int("5".into()),
-            Token::Semicolon,
-            Token::Let,
-            Token::Identifier("ten".into()),
-            Token::Assign,
-            Token::Int("10".into()),
-            Token::Semicolon,
-            Token::Let,
-            Token::Identifier("add".into()),
-            Token::Assign,
-            Token::Function,
-            Token::LParen,
-            Token::Identifier("x".into()),
-            Token::Comma,
-            Token::Identifier("y".into()),
-            Token::RParen,
-            Token::LBrace,
-            Token::Identifier("x".into()),
-            Token::Plus,
-            Token::Identifier("y".into()),
-            Token::Semicolon,
-            Token::RBrace,
-            Token::Semicolon,
-            Token::Let,
-            Token::Identifier("result".into()),
-            Token::Assign,
-            Token::Identifier("add".into()),
-            Token::LParen,
-            Token::Identifier("five".into()),
-            Token::Comma,
-            Token::Identifier("ten".into()),
-            Token::RParen,
-            Token::Semicolon,
-            Token::Bang,
-            Token::Minus,
-            Token::ForwardSlash,
-            Token::Asterisk,
-            Token::Int("5".into()),
-            Token::Semicolon,
-            Token::Int("5".into()),
-            Token::LT,
-            Token::Int("10".into()),
-            Token::GT,
-            Token::Int("5".into()),
-            Token::Semicolon,
-            Token::If,
-            Token::LParen,
-            Token::Int("5".into()),
-            Token::LT,
-            Token::Int("10".into()),
-            Token::RParen,
-            Token::LBrace,
-            Token::Return,
-            Token::True,
-            Token::Semicolon,
-            Token::RBrace,
-            Token::Else,
-            Token::LBrace,
-            Token::Return,
-            Token::False,
-            Token::Semicolon,
-            Token::RBrace,
-            Token::Int("10".into()),
-            Token::Equal,
-            Token::Int("10".into()),
-            Token::Semicolon,
-            Token::Int("10".into()),
-            Token::NotEqual,
-            Token::Int("9".into()),
-            Token::Semicolon,
-            Token::Str("hello world".into()),
-            Token::Semicolon,
-            Token::LBracket,
-            Token::Int("1".into()),
-            Token::Comma,
-            Token::Int("2".into()),
-            Token::RBracket,
-            Token::Semicolon,
-            Token::LBrace,
-            Token::Str("foo".into()),
-            Token::Colon,
-            Token::Str("bar".into()),
-            Token::RBrace,
-            Token::Semicolon,
-            Token::Eof,
-        ];
-
-        assert_eq!(expected, tokens);
-    }
-
-    #[test]
-    fn test_string() {
-        let input = r#"
-        "hello";
-        "#;
+    fn lex(input: &str) -> Vec<Token> {
         let lexer = Lexer::new(input);
 
-        let expected = vec![Token::Str("hello".into()), Token::Semicolon, Token::Eof];
-
-        let tokens = lexer.collect::<Vec<_>>();
-        assert_eq!(expected, tokens);
+        lexer.collect()
     }
+
+    macro_rules! snapshot {
+        ($name:tt, $input:expr) => {
+            #[test]
+            fn $name() {
+                let tokens = lex($input);
+                insta::assert_debug_snapshot!(($input, tokens));
+            }
+        };
+    }
+
+    snapshot!(symbols, "=+(){},;");
+    snapshot!(assignments1, "let five = 5;");
+    snapshot!(assignments2, "let ten = 10;");
+    snapshot!(
+        assignments3,
+        r#"let add = fn(x, y) {
+    x + y;
+};"#
+    );
+    snapshot!(assignments4, "let result = add(five, ten);");
+
+    snapshot!(operators, "!-/*5;");
+    snapshot!(equality1, "5 < 10 > 5;");
+    snapshot!(equality2, "10 == 10;");
+    snapshot!(equality3, "10 != 9;");
+    snapshot!(
+        conditional,
+        r#"if (5 < 10) {
+    return true;
+} else {
+    return false;
+}"#
+    );
+
+    snapshot!(string_literal, r#""hello world";"#);
+    snapshot!(arrays, "[1, 2]");
+    snapshot!(dictionary, r#"{ "foo": "bar" };"#);
 }

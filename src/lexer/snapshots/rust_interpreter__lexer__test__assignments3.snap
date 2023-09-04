@@ -1,0 +1,36 @@
+---
+source: src/lexer/mod.rs
+expression: "(r#\"let add = fn(x, y) {\n    x + y;\n};\"#, tokens)"
+---
+(
+    "let add = fn(x, y) {\n    x + y;\n};",
+    [
+        Let,
+        Identifier(
+            "add",
+        ),
+        Assign,
+        Function,
+        LParen,
+        Identifier(
+            "x",
+        ),
+        Comma,
+        Identifier(
+            "y",
+        ),
+        RParen,
+        LBrace,
+        Identifier(
+            "x",
+        ),
+        Plus,
+        Identifier(
+            "y",
+        ),
+        Semicolon,
+        RBrace,
+        Semicolon,
+        Eof,
+    ],
+)

@@ -1,0 +1,28 @@
+---
+source: src/lexer/mod.rs
+expression: "(\"let result = add(five, ten);\", tokens)"
+---
+(
+    "let result = add(five, ten);",
+    [
+        Let,
+        Identifier(
+            "result",
+        ),
+        Assign,
+        Identifier(
+            "add",
+        ),
+        LParen,
+        Identifier(
+            "five",
+        ),
+        Comma,
+        Identifier(
+            "ten",
+        ),
+        RParen,
+        Semicolon,
+        Eof,
+    ],
+)

@@ -11,6 +11,24 @@ pub enum Statement {
     // ...
 }
 
+impl Node for Statement {
+    fn parse(_parser: &mut Parser) -> anyhow::Result<Self>
+    where
+        Self: std::marker::Sized,
+    {
+        todo!()
+    }
+}
+
+impl std::fmt::Display for Statement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Statement::Let(val) => val.to_string(),
+        };
+        write!(f, "{}", s)
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Let {
     token: Token,
@@ -50,48 +68,38 @@ impl Node for Let {
     }
 }
 
+impl std::fmt::Display for Let {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "let {} = {};", self.name, self.value)
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use crate::ast::*;
-    use crate::lexer::{Lexer, Token};
+    use crate::lexer::Lexer;
     use crate::parser::Parser;
 
-    macro_rules! let_statement {
-        ($(($ident:expr, $expr_variant:path, $expr_type:path, $value:expr)),*) => {{
-            let mut temp_vec = Vec::new();
-        $(
-            let ident = Identifier::try_from(&Token::Identifier($ident.into())).unwrap();
-            let value = $expr_variant($expr_type($value));
-            let stmt = Statement::Let(Let::new(ident, value));
-            temp_vec.push(stmt);
-        )*
-            temp_vec
-        }};
-    }
-
-    #[test]
-    fn let_statement() {
-        let input = r#"
-        let x = 5;
-        let y = 10;
-        let foobar = 838383;
-        let foo = "bar";
-        let fool = true;
-        "#;
-
+    fn parse(input: &str) -> String {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
         let program = parser.parse_programe().expect("valid program");
-
-        let expected = let_statement![
-            ("x", Expression::Primative, Primative::Int, 5),
-            ("y", Expression::Primative, Primative::Int, 10),
-            ("foobar", Expression::Primative, Primative::Int, 838383),
-            ("foo", Expression::StringLiteral, std::rc::Rc::from, "bar"),
-            ("fool", Expression::Primative, Primative::Bool, true)
-        ];
-
-        assert_eq!(program.statements.len(), expected.len());
-        assert_eq!(program.statements, expected);
+        assert!(!program.statements.is_empty());
+        program.statements[0].to_string()
     }
+
+    macro_rules! snapshot_first {
+        ($name:tt, $input:expr) => {
+            #[test]
+            fn $name() {
+                let output = parse($input);
+                insta::assert_snapshot!(output, $input);
+            }
+        };
+    }
+
+    snapshot_first!(let_statement_1, "let x = 5;");
+    snapshot_first!(let_statement_2, "let y = 10;");
+    snapshot_first!(let_statement_3, "let foobar = 838383;");
+    snapshot_first!(let_statement_4, "let foo = \"bar\";");
+    snapshot_first!(let_statement_5, "let foo = true;");
 }

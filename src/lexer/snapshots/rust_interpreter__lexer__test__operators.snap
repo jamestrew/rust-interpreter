@@ -1,0 +1,18 @@
+---
+source: src/lexer/mod.rs
+expression: "(\"!-/*5;\", tokens)"
+---
+(
+    "!-/*5;",
+    [
+        Bang,
+        Minus,
+        ForwardSlash,
+        Asterisk,
+        Int(
+            "5",
+        ),
+        Semicolon,
+        Eof,
+    ],
+)

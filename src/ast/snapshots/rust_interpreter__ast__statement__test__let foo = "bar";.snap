@@ -1,0 +1,5 @@
+---
+source: src/ast/statement.rs
+expression: "\"let foo = \\\"bar\\\";\""
+---
+let foo = "bar";

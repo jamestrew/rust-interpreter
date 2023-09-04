@@ -1,0 +1,18 @@
+---
+source: src/lexer/mod.rs
+expression: "(\"=+(){},;\", tokens)"
+---
+(
+    "=+(){},;",
+    [
+        Assign,
+        Plus,
+        LParen,
+        RParen,
+        LBrace,
+        RBrace,
+        Comma,
+        Semicolon,
+        Eof,
+    ],
+)

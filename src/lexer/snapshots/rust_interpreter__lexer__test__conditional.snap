@@ -1,0 +1,31 @@
+---
+source: src/lexer/mod.rs
+expression: "(r#\"if (5 < 10) {\n    return true;\n} else {\n    return false;\n}\"#, tokens)"
+---
+(
+    "if (5 < 10) {\n    return true;\n} else {\n    return false;\n}",
+    [
+        If,
+        LParen,
+        Int(
+            "5",
+        ),
+        LT,
+        Int(
+            "10",
+        ),
+        RParen,
+        LBrace,
+        Return,
+        True,
+        Semicolon,
+        RBrace,
+        Else,
+        LBrace,
+        Return,
+        False,
+        Semicolon,
+        RBrace,
+        Eof,
+    ],
+)
