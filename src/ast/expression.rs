@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
-use crate::{lexer::Token, parser::Parser};
-
 use super::Node;
+use crate::lexer::Token;
+use crate::parser::Parser;
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
