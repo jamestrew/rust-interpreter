@@ -17,14 +17,16 @@ impl Node for Expression {
         Self: std::marker::Sized,
     {
         let token = parser.current_token()?;
-        match token {
+        let expr = match token {
             Token::Int(_) | Token::True | Token::False => {
                 Ok(Expression::Primative(Primative::parse(parser)?))
             }
             Token::Str(s) => Ok(Expression::StringLiteral(s.clone())),
             Token::Identifier(_) => Ok(Expression::Identifier(Identifier::parse(parser)?)),
             _ => todo!("Expression::parse for {:?}", token),
-        }
+        };
+        parser.swallow_semicolons();
+        expr
     }
 }
 
@@ -68,7 +70,6 @@ impl Node for Identifier {
         Self: std::marker::Sized,
     {
         let node = Self::try_from(parser.current_token()?);
-        parser.swallow_semicolons();
         node
     }
 }
@@ -139,4 +140,7 @@ mod test {
     }
 
     test!(identifier, "foobar;");
+    test!(integer_literal, "1;");
+    test!(boolean_literal, "true;");
+    test!(string_literal, "\"hello world\";");
 }
