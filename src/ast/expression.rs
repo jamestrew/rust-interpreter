@@ -16,7 +16,7 @@ impl Node for Expression {
     where
         Self: std::marker::Sized,
     {
-        let token = parser.current_token_unwrap()?;
+        let token = parser.current_token()?;
         match token {
             Token::Int(_) | Token::True | Token::False => {
                 Ok(Expression::Primative(Primative::parse(parser)?))
@@ -66,7 +66,7 @@ impl Node for Identifier {
     where
         Self: std::marker::Sized,
     {
-        Self::try_from(parser.current_token_unwrap()?)
+        Self::try_from(parser.current_token()?)
     }
 }
 
@@ -87,7 +87,7 @@ impl Node for Primative {
     where
         Self: std::marker::Sized,
     {
-        let token = parser.current_token_unwrap()?;
+        let token = parser.current_token()?;
         match token {
             Token::Int(val) => Ok(Self::Int(val.parse::<i64>()?)),
             Token::True => Ok(Self::Bool(true)),
@@ -105,6 +105,3 @@ impl std::fmt::Display for Primative {
         }
     }
 }
-
-#[derive(Debug, PartialEq)]
-pub struct StringLiteral {}

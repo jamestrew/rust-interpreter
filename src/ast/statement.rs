@@ -12,11 +12,15 @@ pub enum Statement {
 }
 
 impl Node for Statement {
-    fn parse(_parser: &mut Parser) -> anyhow::Result<Self>
+    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
     where
         Self: std::marker::Sized,
     {
-        todo!()
+        let token = parser.current_token()?;
+        match token {
+            Token::Let => Ok(Statement::Let(Let::parse(parser)?)),
+            _ => todo!("Statement::parse for {:?}", token),
+        }
     }
 }
 
@@ -87,19 +91,19 @@ mod test {
         program.statements[0].to_string()
     }
 
-    macro_rules! snapshot_first {
+    macro_rules! test {
         ($name:tt, $input:expr) => {
             #[test]
             fn $name() {
                 let output = parse($input);
-                insta::assert_snapshot!(output, $input);
+                assert_eq!($input, output);
             }
         };
     }
 
-    snapshot_first!(let_statement_1, "let x = 5;");
-    snapshot_first!(let_statement_2, "let y = 10;");
-    snapshot_first!(let_statement_3, "let foobar = 838383;");
-    snapshot_first!(let_statement_4, "let foo = \"bar\";");
-    snapshot_first!(let_statement_5, "let foo = true;");
+    test!(literal_let_statement_1, "let x = 5;");
+    test!(literal_let_statement_2, "let y = 10;");
+    test!(literal_let_statement_3, "let foobar = 838383;");
+    test!(literal_let_statement_4, "let foo = \"bar\";");
+    test!(literal_let_statement_5, "let foo = true;");
 }

@@ -1,4 +1,4 @@
-use crate::ast::{Let, Node, Program, Statement};
+use crate::ast::{Node, Program, Statement};
 use crate::lexer::{Lexer, Token};
 
 pub struct Parser {
@@ -21,7 +21,7 @@ impl Parser {
     pub fn parse_programe(&mut self) -> anyhow::Result<Program> {
         let mut program = Program::default();
         while !self.current_token_is(Token::Eof) {
-            program.statements.push(self.parse_node()?);
+            program.statements.push(Statement::parse(self)?);
             self.next_token();
         }
         Ok(program)
@@ -35,22 +35,14 @@ impl Parser {
         }
     }
 
-    fn parse_node(&mut self) -> anyhow::Result<Statement> {
-        let token = self.current_token_unwrap()?;
-        match token {
-            Token::Let => Ok(Statement::Let(Let::parse(self)?)),
-            _ => todo!("unexpected token {:?}", token),
-        }
-    }
-
-    pub fn current_token_unwrap(&self) -> anyhow::Result<&Token> {
+    pub fn current_token(&self) -> anyhow::Result<&Token> {
         if self.current_token.is_none() {
             return Err(anyhow::anyhow!("No current token"));
         }
         Ok(self.current_token.as_ref().unwrap())
     }
 
-    pub fn peek_token_wrap(&self) -> anyhow::Result<&Token> {
+    pub fn peek_token(&self) -> anyhow::Result<&Token> {
         if self.peek_token.is_none() {
             return Err(anyhow::anyhow!("No peek token"));
         }

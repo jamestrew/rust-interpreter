@@ -1,5 +1,0 @@
----
-source: src/ast/statement.rs
-expression: "\"let foobar = 838383;\""
----
-let foobar = 838383;

@@ -1,5 +1,0 @@
----
-source: src/ast/statement.rs
-expression: "\"let foo = true;\""
----
-let foo = true;

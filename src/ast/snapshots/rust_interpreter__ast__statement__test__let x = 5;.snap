@@ -1,5 +1,0 @@
----
-source: src/ast/statement.rs
-expression: "\"let x = 5;\""
----
-let x = 5;
