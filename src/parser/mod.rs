@@ -35,6 +35,14 @@ impl Parser {
         }
     }
 
+    pub fn peek_token_is(&self, match_token: Token) -> bool {
+        if let Some(token) = &self.peek_token {
+            *token == match_token
+        } else {
+            false
+        }
+    }
+
     pub fn current_token(&self) -> anyhow::Result<&Token> {
         if self.current_token.is_none() {
             return Err(anyhow::anyhow!("No current token"));
@@ -52,5 +60,14 @@ impl Parser {
     pub fn next_token(&mut self) {
         self.current_token = self.peek_token.take();
         self.peek_token = self.lexer.next();
+    }
+
+    pub fn swallow_semicolons(&mut self) {
+        self.next_token();
+        println!("starting with {:?}", self.current_token);
+        while self.peek_token_is(Token::Semicolon) {
+            self.next_token();
+            println!("now {:?}", self.current_token);
+        }
     }
 }

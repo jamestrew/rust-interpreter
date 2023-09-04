@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use anyhow::anyhow;
 
 use super::expression::{Expression, Identifier};
@@ -8,6 +10,7 @@ use crate::parser::Parser;
 #[derive(Debug, PartialEq)]
 pub enum Statement {
     Let(Let),
+    Return(Return),
     // ...
 }
 
@@ -19,15 +22,17 @@ impl Node for Statement {
         let token = parser.current_token()?;
         match token {
             Token::Let => Ok(Statement::Let(Let::parse(parser)?)),
+            Token::Return => Ok(Statement::Return(Return::parse(parser)?)),
             _ => todo!("Statement::parse for {:?}", token),
         }
     }
 }
 
-impl std::fmt::Display for Statement {
+impl Display for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             Statement::Let(val) => val.to_string(),
+            Statement::Return(val) => val.to_string(),
         };
         write!(f, "{}", s)
     }
@@ -63,7 +68,7 @@ impl Node for Let {
         }
         parser.next_token();
         let value = Expression::parse(parser)?;
-        parser.next_token();
+        parser.swallow_semicolons();
         Ok(Self {
             token: Token::Let,
             name,
@@ -72,9 +77,36 @@ impl Node for Let {
     }
 }
 
-impl std::fmt::Display for Let {
+impl Display for Let {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "let {} = {};", self.name, self.value)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Return {
+    token: Token,
+    value: Expression,
+}
+
+impl Node for Return {
+    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    where
+        Self: std::marker::Sized,
+    {
+        parser.next_token();
+        let value = Expression::parse(parser)?;
+        parser.swallow_semicolons();
+        Ok(Self {
+            token: Token::Return,
+            value,
+        })
+    }
+}
+
+impl Display for Return {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "return {};", self.value)
     }
 }
 
@@ -89,6 +121,12 @@ mod test {
         let program = parser.parse_programe().expect("valid program");
         assert!(!program.statements.is_empty());
         program.statements[0].to_string()
+    }
+
+    #[test]
+    fn swallow_extra_semicolons() {
+        let output = parse("return true;;;;");
+        assert_eq!(output, "return true;");
     }
 
     macro_rules! test {
@@ -106,4 +144,8 @@ mod test {
     test!(literal_let_statement_3, "let foobar = 838383;");
     test!(literal_let_statement_4, "let foo = \"bar\";");
     test!(literal_let_statement_5, "let foo = true;");
+
+    test!(literal_return_statement_1, "return 5;");
+    test!(literal_return_statement_2, "return true;");
+    test!(literal_return_statement_3, "return \"foo\";");
 }
