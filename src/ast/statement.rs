@@ -11,6 +11,7 @@ use crate::parser::Parser;
 pub enum Statement {
     Let(Let),
     Return(Return),
+    ExpressionStatement(Box<Expression>),
     // ...
 }
 
@@ -23,7 +24,9 @@ impl Node for Statement {
         match token {
             Token::Let => Ok(Statement::Let(Let::parse(parser)?)),
             Token::Return => Ok(Statement::Return(Return::parse(parser)?)),
-            _ => todo!("Statement::parse for {:?}", token),
+            _ => Ok(Statement::ExpressionStatement(Box::new(Expression::parse(
+                parser,
+            )?))),
         }
     }
 }
@@ -33,6 +36,7 @@ impl Display for Statement {
         let s = match self {
             Statement::Let(val) => val.to_string(),
             Statement::Return(val) => val.to_string(),
+            Statement::ExpressionStatement(val) => format!("{};", val),
         };
         write!(f, "{}", s)
     }
@@ -43,16 +47,6 @@ pub struct Let {
     token: Token,
     name: Identifier,
     value: Expression,
-}
-
-impl Let {
-    pub fn new(name: Identifier, value: Expression) -> Self {
-        Self {
-            token: Token::Let,
-            name,
-            value,
-        }
-    }
 }
 
 impl Node for Let {
@@ -144,8 +138,10 @@ mod test {
     test!(literal_let_statement_3, "let foobar = 838383;");
     test!(literal_let_statement_4, "let foo = \"bar\";");
     test!(literal_let_statement_5, "let foo = true;");
+    test!(identifier_let_statement, "let foo = foobar;");
 
     test!(literal_return_statement_1, "return 5;");
     test!(literal_return_statement_2, "return true;");
     test!(literal_return_statement_3, "return \"foo\";");
+    test!(identifier_return_statement, "return foobar;");
 }

@@ -63,11 +63,8 @@ impl Parser {
     }
 
     pub fn swallow_semicolons(&mut self) {
-        self.next_token();
-        println!("starting with {:?}", self.current_token);
         while self.peek_token_is(Token::Semicolon) {
             self.next_token();
-            println!("now {:?}", self.current_token);
         }
     }
 }
