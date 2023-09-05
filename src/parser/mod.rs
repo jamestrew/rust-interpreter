@@ -1,5 +1,8 @@
+mod precedence;
+
 use crate::ast::{Node, Program, Statement};
 use crate::lexer::{Lexer, Token};
+pub use precedence::Precedence;
 
 pub struct Parser {
     lexer: Lexer,
@@ -21,7 +24,7 @@ impl Parser {
     pub fn parse_programe(&mut self) -> anyhow::Result<Program> {
         let mut program = Program::default();
         while !self.current_token_is(Token::Eof) {
-            program.statements.push(Statement::parse(self)?);
+            program.statements.push(Statement::parse(self, None)?);
             self.next_token();
         }
         Ok(program)

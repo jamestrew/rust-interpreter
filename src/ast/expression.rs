@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use super::Node;
 use crate::lexer::Token;
-use crate::parser::Parser;
+use crate::parser::*;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
@@ -14,18 +14,18 @@ pub enum Expression {
 }
 
 impl Node for Expression {
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
     where
         Self: std::marker::Sized,
     {
         let token = parser.current_token()?;
         let expr = match token {
             Token::Int(_) | Token::True | Token::False => {
-                Ok(Expression::Primative(Primative::parse(parser)?))
+                Ok(Expression::Primative(Primative::parse(parser, None)?))
             }
             Token::Str(s) => Ok(Expression::StringLiteral(s.clone())),
-            Token::Identifier(_) => Ok(Expression::Identifier(Identifier::parse(parser)?)),
-            Token::Minus | Token::Bang => Ok(Expression::Prefix(Prefix::parse(parser)?)),
+            Token::Identifier(_) => Ok(Expression::Identifier(Identifier::parse(parser, None)?)),
+            Token::Minus | Token::Bang => Ok(Expression::Prefix(Prefix::parse(parser, None)?)),
             _ => todo!("Expression::parse for {:?}", token),
         };
         parser.swallow_semicolons();
@@ -69,7 +69,7 @@ impl<'a> TryFrom<&'a Token> for Identifier {
 }
 
 impl Node for Identifier {
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
     where
         Self: std::marker::Sized,
     {
@@ -90,7 +90,7 @@ pub enum Primative {
 }
 
 impl Node for Primative {
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
     where
         Self: std::marker::Sized,
     {
@@ -130,13 +130,13 @@ impl Prefix {
 }
 
 impl Node for Prefix {
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
     where
         Self: std::marker::Sized,
     {
         let operator = parser.current_token()?.clone();
         parser.next_token();
-        let right = Expression::parse(parser)?;
+        let right = Expression::parse(parser, Some(Precedence::Prefix))?;
         Ok(Self {
             token: operator,
             right: Box::new(right),
@@ -210,4 +210,6 @@ mod test {
 
     snapshot_debug!(prefix_expression_1, "-5;");
     snapshot_debug!(prefix_expression_2, "!foobar;");
+
+    snapshot_debug!(infix_expr_1, "5 + 5;");
 }

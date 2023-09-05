@@ -4,10 +4,10 @@ mod statement;
 pub use expression::*;
 pub use statement::*;
 
-use crate::parser::Parser;
+use crate::parser::*;
 
 pub trait Node: std::fmt::Display {
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    fn parse(parser: &mut Parser, precedence: Option<Precedence>) -> anyhow::Result<Self>
     where
         Self: std::marker::Sized;
 }

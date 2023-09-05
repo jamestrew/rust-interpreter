@@ -5,7 +5,7 @@ use anyhow::anyhow;
 use super::expression::{Expression, Identifier};
 use super::Node;
 use crate::lexer::Token;
-use crate::parser::Parser;
+use crate::parser::*;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
@@ -16,16 +16,16 @@ pub enum Statement {
 }
 
 impl Node for Statement {
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
     where
         Self: std::marker::Sized,
     {
         let token = parser.current_token()?;
         match token {
-            Token::Let => Ok(Statement::Let(Let::parse(parser)?)),
-            Token::Return => Ok(Statement::Return(Return::parse(parser)?)),
+            Token::Let => Ok(Statement::Let(Let::parse(parser, None)?)),
+            Token::Return => Ok(Statement::Return(Return::parse(parser, None)?)),
             _ => Ok(Statement::ExpressionStatement(Box::new(Expression::parse(
-                parser,
+                parser, None,
             )?))),
         }
     }
@@ -50,18 +50,18 @@ pub struct Let {
 }
 
 impl Node for Let {
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
     where
         Self: std::marker::Sized,
     {
         parser.next_token();
-        let name = Identifier::parse(parser)?;
+        let name = Identifier::parse(parser, None)?;
         parser.next_token();
         if parser.current_token_is(Token::Equal) {
             return Err(anyhow!("Expected `=` symbol in let statement"));
         }
         parser.next_token();
-        let value = Expression::parse(parser)?;
+        let value = Expression::parse(parser, None)?;
         parser.swallow_semicolons();
         Ok(Self {
             token: Token::Let,
@@ -84,12 +84,12 @@ pub struct Return {
 }
 
 impl Node for Return {
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
     where
         Self: std::marker::Sized,
     {
         parser.next_token();
-        let value = Expression::parse(parser)?;
+        let value = Expression::parse(parser, None)?;
         parser.swallow_semicolons();
         Ok(Self {
             token: Token::Return,
