@@ -7,7 +7,7 @@ use super::Node;
 use crate::lexer::Token;
 use crate::parser::Parser;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
     Let(Let),
     Return(Return),
@@ -42,7 +42,7 @@ impl Display for Statement {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Let {
     token: Token,
     name: Identifier,
@@ -77,7 +77,7 @@ impl Display for Let {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Return {
     token: Token,
     value: Expression,

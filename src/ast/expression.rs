@@ -1,14 +1,16 @@
+use std::fmt::{Debug, Display};
 use std::rc::Rc;
 
 use super::Node;
 use crate::lexer::Token;
 use crate::parser::Parser;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
     Identifier(Identifier),
     Primative(Primative),
     StringLiteral(Rc<str>),
+    Prefix(Prefix),
 }
 
 impl Node for Expression {
@@ -23,6 +25,7 @@ impl Node for Expression {
             }
             Token::Str(s) => Ok(Expression::StringLiteral(s.clone())),
             Token::Identifier(_) => Ok(Expression::Identifier(Identifier::parse(parser)?)),
+            Token::Minus | Token::Bang => Ok(Expression::Prefix(Prefix::parse(parser)?)),
             _ => todo!("Expression::parse for {:?}", token),
         };
         parser.swallow_semicolons();
@@ -36,12 +39,13 @@ impl std::fmt::Display for Expression {
             Expression::Identifier(val) => val.to_string(),
             Expression::Primative(val) => val.to_string(),
             Expression::StringLiteral(val) => format!("\"{}\"", val),
+            Expression::Prefix(val) => val.to_string(),
         };
         write!(f, "{}", s)
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Identifier {
     token: Token,
     value: Rc<str>,
@@ -69,8 +73,7 @@ impl Node for Identifier {
     where
         Self: std::marker::Sized,
     {
-        let node = Self::try_from(parser.current_token()?);
-        node
+        Self::try_from(parser.current_token()?)
     }
 }
 
@@ -80,7 +83,7 @@ impl std::fmt::Display for Identifier {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Primative {
     Int(i64),
     Bool(bool),
@@ -110,31 +113,92 @@ impl std::fmt::Display for Primative {
     }
 }
 
+#[derive(PartialEq, Clone)]
+pub struct Prefix {
+    token: Token,
+    right: Box<Expression>,
+}
+
+impl Prefix {
+    fn operator_str(&self) -> &'static str {
+        match self.token {
+            Token::Minus => "-",
+            Token::Bang => "!",
+            _ => unreachable!("only Bang and Minus are allowed prefixes"),
+        }
+    }
+}
+
+impl Node for Prefix {
+    fn parse(parser: &mut Parser) -> anyhow::Result<Self>
+    where
+        Self: std::marker::Sized,
+    {
+        let operator = parser.current_token()?.clone();
+        parser.next_token();
+        let right = Expression::parse(parser)?;
+        Ok(Self {
+            token: operator,
+            right: Box::new(right),
+        })
+    }
+}
+
+impl Debug for Prefix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}{})", self.operator_str(), self.right)
+    }
+}
+
+impl Display for Prefix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}{}", self.operator_str(), self.right)
+    }
+}
+
 #[cfg(test)]
 mod test {
+    use crate::ast::Statement;
     use crate::lexer::Lexer;
     use crate::parser::Parser;
 
-    fn parse(input: &str) -> String {
+    fn parse(input: &str) -> Vec<Statement> {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
         let program = parser.parse_programe().expect("valid program");
         assert!(!program.statements.is_empty());
-        program.statements[0].to_string()
+        program.statements
     }
 
     #[test]
     fn swallow_extra_semicolons() {
-        let output = parse("foobar;;;;");
-        assert_eq!(output, "foobar;");
+        let statements = parse("foobar;;;;");
+        let first = statements[0].to_string();
+        assert_eq!(first, "foobar;");
     }
 
     macro_rules! test {
         ($name:tt, $input:expr) => {
             #[test]
             fn $name() {
-                let output = parse($input);
-                assert_eq!($input, output);
+                let statements = parse($input);
+                let first = statements[0].to_string();
+                assert_eq!($input, first);
+            }
+        };
+    }
+
+    macro_rules! snapshot_debug {
+        ($name:tt, $input:expr) => {
+            #[test]
+            fn $name() {
+                let statements = parse($input);
+                let first = &statements[0];
+                insta::with_settings!({
+                    description => $input,
+                }, {
+                    insta::assert_debug_snapshot!(first);
+                })
             }
         };
     }
@@ -143,4 +207,7 @@ mod test {
     test!(integer_literal, "1;");
     test!(boolean_literal, "true;");
     test!(string_literal, "\"hello world\";");
+
+    snapshot_debug!(prefix_expression_1, "-5;");
+    snapshot_debug!(prefix_expression_2, "!foobar;");
 }
