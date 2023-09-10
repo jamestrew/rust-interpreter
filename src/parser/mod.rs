@@ -24,7 +24,7 @@ impl Parser {
     pub fn parse_programe(&mut self) -> anyhow::Result<Program> {
         let mut program = Program::default();
         while !self.current_token_is(Token::Eof) {
-            program.statements.push(Statement::parse(self, None)?);
+            program.statements.push(Statement::parse(self)?);
             self.next_token();
         }
         Ok(program)

@@ -14,21 +14,24 @@ pub enum Expression {
     Infix(Infix),
 }
 
-impl Node for Expression {
-    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
-    where
-        Self: std::marker::Sized,
-    {
+impl Node for Expression {}
+
+impl Expression {
+    pub fn parse(parser: &mut Parser, precedence: Precedence) -> anyhow::Result<Self> {
         let token = parser.current_token()?;
         let expr = match token {
             Token::Int(_) | Token::True | Token::False => {
-                Ok(Expression::Primative(Primative::parse(parser, None)?))
+                Ok(Expression::Primative(Primative::parse(parser)?))
             }
             Token::Str(s) => Ok(Expression::StringLiteral(s.clone())),
-            Token::Identifier(_) => Ok(Expression::Identifier(Identifier::parse(parser, None)?)),
-            Token::Minus | Token::Bang => Ok(Expression::Prefix(Prefix::parse(parser, None)?)),
+            Token::Identifier(_) => Ok(Expression::Identifier(Identifier::parse(parser)?)),
+            Token::Minus | Token::Bang => {
+                Ok(Expression::Prefix(Prefix::parse(parser, precedence)?))
+            }
             _ => todo!("Expression::parse for {:?}", token),
         };
+
+        // while precedence < parser.peek_precedence()? {}
         parser.swallow_semicolons();
         expr
     }
@@ -53,6 +56,17 @@ pub struct Identifier {
     value: Rc<str>,
 }
 
+impl Node for Identifier {}
+
+impl Identifier {
+    pub fn parse(parser: &Parser) -> anyhow::Result<Self>
+    where
+        Self: std::marker::Sized,
+    {
+        Self::try_from(parser.current_token()?)
+    }
+}
+
 impl<'a> TryFrom<&'a Token> for Identifier {
     type Error = anyhow::Error;
 
@@ -70,15 +84,6 @@ impl<'a> TryFrom<&'a Token> for Identifier {
     }
 }
 
-impl Node for Identifier {
-    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
-    where
-        Self: std::marker::Sized,
-    {
-        Self::try_from(parser.current_token()?)
-    }
-}
-
 impl std::fmt::Display for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.value)
@@ -91,11 +96,10 @@ pub enum Primative {
     Bool(bool),
 }
 
-impl Node for Primative {
-    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
-    where
-        Self: std::marker::Sized,
-    {
+impl Node for Primative {}
+
+impl Primative {
+    pub fn parse(parser: &Parser) -> anyhow::Result<Self> {
         let token = parser.current_token()?;
         match token {
             Token::Int(val) => Ok(Self::Int(val.parse::<i64>()?)),
@@ -121,28 +125,27 @@ pub struct Prefix {
     right: Box<Expression>,
 }
 
+impl Node for Prefix {}
+
 impl Prefix {
+    pub fn parse(parser: &mut Parser, _precedence: Precedence) -> anyhow::Result<Self>
+    where
+        Self: std::marker::Sized,
+    {
+        let operator = parser.current_token()?.clone();
+        parser.next_token();
+        let right = Expression::parse(parser, Precedence::Prefix)?;
+        Ok(Self {
+            token: operator,
+            right: Box::new(right),
+        })
+    }
     fn operator_str(&self) -> &'static str {
         match self.token {
             Token::Minus => "-",
             Token::Bang => "!",
             _ => unreachable!("only Bang and Minus are allowed prefixes"),
         }
-    }
-}
-
-impl Node for Prefix {
-    fn parse(parser: &mut Parser, _precedence: Option<Precedence>) -> anyhow::Result<Self>
-    where
-        Self: std::marker::Sized,
-    {
-        let operator = parser.current_token()?.clone();
-        parser.next_token();
-        let right = Expression::parse(parser, Some(Precedence::Prefix))?;
-        Ok(Self {
-            token: operator,
-            right: Box::new(right),
-        })
     }
 }
 
