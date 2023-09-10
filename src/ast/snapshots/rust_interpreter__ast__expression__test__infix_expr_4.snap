@@ -1,0 +1,10 @@
+---
+source: src/ast/expression.rs
+description: 5 / 6;
+expression: first
+---
+ExpressionStatement(
+    Infix(
+        (5 / 6),
+    ),
+)

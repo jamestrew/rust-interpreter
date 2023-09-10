@@ -1,0 +1,10 @@
+---
+source: src/ast/expression.rs
+description: 7 > 6
+expression: first
+---
+ExpressionStatement(
+    Infix(
+        (7 > 6),
+    ),
+)

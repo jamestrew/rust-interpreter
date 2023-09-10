@@ -24,7 +24,8 @@ impl Statement {
             Token::Let => Ok(Statement::Let(Let::parse(parser)?)),
             Token::Return => Ok(Statement::Return(Return::parse(parser)?)),
             _ => Ok(Statement::ExpressionStatement(Box::new(Expression::parse(
-                parser, LOWEST,
+                parser,
+                Precedence::Lowest,
             )?))),
         }
     }
@@ -59,7 +60,7 @@ impl Let {
             return Err(anyhow!("Expected `=` symbol in let statement"));
         }
         parser.next_token();
-        let value = Expression::parse(parser, LOWEST)?;
+        let value = Expression::parse(parser, Precedence::Lowest)?;
         parser.swallow_semicolons();
         Ok(Self {
             token: Token::Let,
@@ -89,7 +90,7 @@ impl Return {
         Self: std::marker::Sized,
     {
         parser.next_token();
-        let value = Expression::parse(parser, LOWEST)?;
+        let value = Expression::parse(parser, Precedence::Lowest)?;
         parser.swallow_semicolons();
         Ok(Self {
             token: Token::Return,

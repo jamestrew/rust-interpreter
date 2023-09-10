@@ -1,8 +1,9 @@
 mod precedence;
 
-use crate::ast::{Node, Program, Statement};
-use crate::lexer::{Lexer, Token};
 pub use precedence::Precedence;
+
+use crate::ast::{Program, Statement};
+use crate::lexer::{Lexer, Token};
 
 pub struct Parser {
     lexer: Lexer,
@@ -69,5 +70,13 @@ impl Parser {
         while self.peek_token_is(Token::Semicolon) {
             self.next_token();
         }
+    }
+
+    pub fn current_precedence(&self) -> anyhow::Result<Precedence> {
+        Ok(self.current_token()?.into())
+    }
+
+    pub fn peek_precedence(&self) -> anyhow::Result<Precedence> {
+        Ok(self.peek_token()?.into())
     }
 }

@@ -19,21 +19,21 @@ impl Node for Expression {}
 impl Expression {
     pub fn parse(parser: &mut Parser, precedence: Precedence) -> anyhow::Result<Self> {
         let token = parser.current_token()?;
-        let expr = match token {
+        let mut expr = match token {
             Token::Int(_) | Token::True | Token::False => {
-                Ok(Expression::Primative(Primative::parse(parser)?))
+                Expression::Primative(Primative::parse(parser)?)
             }
-            Token::Str(s) => Ok(Expression::StringLiteral(s.clone())),
-            Token::Identifier(_) => Ok(Expression::Identifier(Identifier::parse(parser)?)),
-            Token::Minus | Token::Bang => {
-                Ok(Expression::Prefix(Prefix::parse(parser, precedence)?))
-            }
+            Token::Str(s) => Expression::StringLiteral(s.clone()),
+            Token::Identifier(_) => Expression::Identifier(Identifier::parse(parser)?),
+            Token::Minus | Token::Bang => Expression::Prefix(Prefix::parse(parser, precedence)?),
             _ => todo!("Expression::parse for {:?}", token),
         };
 
-        // while precedence < parser.peek_precedence()? {}
+        while precedence < parser.peek_precedence()? {
+            expr = Expression::Infix(Infix::parse(parser, expr)?);
+        }
         parser.swallow_semicolons();
-        expr
+        Ok(expr)
     }
 }
 
@@ -168,6 +168,8 @@ pub struct Infix {
     right: Box<Expression>,
 }
 
+impl Node for Infix {}
+
 impl Infix {
     fn operator_str(&self) -> &'static str {
         match self.token {
@@ -181,6 +183,19 @@ impl Infix {
             Token::GT => ">",
             _ => unreachable!("only Bang and Minus are allowed prefixes"),
         }
+    }
+
+    fn parse(parser: &mut Parser, left: Expression) -> anyhow::Result<Self> {
+        parser.next_token();
+        let op_token = parser.current_token()?.clone();
+        let op_precedence = parser.current_precedence()?;
+        parser.next_token();
+        let right = Expression::parse(parser, op_precedence)?;
+        Ok(Self {
+            token: op_token,
+            left: Box::new(left),
+            right: Box::new(right),
+        })
     }
 }
 
@@ -251,5 +266,12 @@ mod test {
     snapshot_debug!(prefix_expression_1, "-5;");
     snapshot_debug!(prefix_expression_2, "!foobar;");
 
-    snapshot_debug!(infix_expr_1, "5 + 5;");
+    snapshot_debug!(infix_expr_1, "5 + 6;");
+    snapshot_debug!(infix_expr_2, "5 - 6;");
+    snapshot_debug!(infix_expr_3, "5 * 6;");
+    snapshot_debug!(infix_expr_4, "5 / 6;");
+    snapshot_debug!(infix_expr_5, "true == true;");
+    snapshot_debug!(infix_expr_6, "true != false;");
+    snapshot_debug!(infix_expr_7, "5 < 6");
+    snapshot_debug!(infix_expr_8, "7 > 6");
 }
