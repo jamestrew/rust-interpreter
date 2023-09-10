@@ -11,6 +11,7 @@ pub enum Expression {
     Primative(Primative),
     StringLiteral(Rc<str>),
     Prefix(Prefix),
+    Infix(Infix),
 }
 
 impl Node for Expression {
@@ -40,6 +41,7 @@ impl std::fmt::Display for Expression {
             Expression::Primative(val) => val.to_string(),
             Expression::StringLiteral(val) => format!("\"{}\"", val),
             Expression::Prefix(val) => val.to_string(),
+            Expression::Infix(val) => val.to_string(),
         };
         write!(f, "{}", s)
     }
@@ -153,6 +155,41 @@ impl Debug for Prefix {
 impl Display for Prefix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}{}", self.operator_str(), self.right)
+    }
+}
+
+#[derive(PartialEq, Clone)]
+pub struct Infix {
+    token: Token,
+    left: Box<Expression>,
+    right: Box<Expression>,
+}
+
+impl Infix {
+    fn operator_str(&self) -> &'static str {
+        match self.token {
+            Token::Minus => "-",
+            Token::Plus => "+",
+            Token::Asterisk => "*",
+            Token::ForwardSlash => "/",
+            Token::Equal => "==",
+            Token::NotEqual => "!=",
+            Token::LT => "<",
+            Token::GT => ">",
+            _ => unreachable!("only Bang and Minus are allowed prefixes"),
+        }
+    }
+}
+
+impl Debug for Infix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({} {} {})", self.left, self.operator_str(), self.right)
+    }
+}
+
+impl Display for Infix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {} {}", self.left, self.operator_str(), self.right)
     }
 }
 
