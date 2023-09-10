@@ -4,7 +4,5 @@ description: "-5;"
 expression: first
 ---
 ExpressionStatement(
-    Prefix(
-        (-5),
-    ),
+    Prefix { token: "-", right: Int(5) },
 )

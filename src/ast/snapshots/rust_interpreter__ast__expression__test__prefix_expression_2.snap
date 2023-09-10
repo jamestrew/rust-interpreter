@@ -4,7 +4,5 @@ description: "!foobar;"
 expression: first
 ---
 ExpressionStatement(
-    Prefix(
-        (!foobar),
-    ),
+    Prefix { token: "!", right: Identifier("foobar") },
 )

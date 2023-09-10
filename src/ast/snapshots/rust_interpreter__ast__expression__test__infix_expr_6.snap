@@ -4,7 +4,5 @@ description: true != false;
 expression: first
 ---
 ExpressionStatement(
-    Infix(
-        (true != false),
-    ),
+    Infix { token: "!=", left: Bool(true), right: Bool(false) },
 )

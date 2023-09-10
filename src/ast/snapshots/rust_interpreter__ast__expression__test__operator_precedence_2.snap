@@ -1,0 +1,6 @@
+---
+source: src/ast/expression.rs
+description: "!-a"
+expression: first
+---
+(!(-a));

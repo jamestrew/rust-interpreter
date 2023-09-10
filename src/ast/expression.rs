@@ -5,7 +5,7 @@ use super::Node;
 use crate::lexer::Token;
 use crate::parser::*;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub enum Expression {
     Identifier(Identifier),
     Primative(Primative),
@@ -25,7 +25,7 @@ impl Expression {
             }
             Token::Str(s) => Expression::StringLiteral(s.clone()),
             Token::Identifier(_) => Expression::Identifier(Identifier::parse(parser)?),
-            Token::Minus | Token::Bang => Expression::Prefix(Prefix::parse(parser, precedence)?),
+            Token::Minus | Token::Bang => Expression::Prefix(Prefix::parse(parser)?),
             _ => todo!("Expression::parse for {:?}", token),
         };
 
@@ -37,7 +37,19 @@ impl Expression {
     }
 }
 
-impl std::fmt::Display for Expression {
+impl Debug for Expression {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expression::Identifier(val) => write!(f, "{:?}", val),
+            Expression::Primative(val) => write!(f, "{:?}", val),
+            Expression::StringLiteral(val) => write!(f, "StringLiteral({:?})", val),
+            Expression::Prefix(val) => write!(f, "{:?}", val),
+            Expression::Infix(val) => write!(f, "{:?}", val),
+        }
+    }
+}
+
+impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             Expression::Identifier(val) => val.to_string(),
@@ -50,7 +62,7 @@ impl std::fmt::Display for Expression {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Identifier {
     token: Token,
     value: Rc<str>,
@@ -59,10 +71,7 @@ pub struct Identifier {
 impl Node for Identifier {}
 
 impl Identifier {
-    pub fn parse(parser: &Parser) -> anyhow::Result<Self>
-    where
-        Self: std::marker::Sized,
-    {
+    pub fn parse(parser: &Parser) -> anyhow::Result<Self> {
         Self::try_from(parser.current_token()?)
     }
 }
@@ -84,13 +93,19 @@ impl<'a> TryFrom<&'a Token> for Identifier {
     }
 }
 
-impl std::fmt::Display for Identifier {
+impl Debug for Identifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Identifier({:?})", self.value)
+    }
+}
+
+impl Display for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.value)
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub enum Primative {
     Int(i64),
     Bool(bool),
@@ -110,7 +125,16 @@ impl Primative {
     }
 }
 
-impl std::fmt::Display for Primative {
+impl Debug for Primative {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Int(val) => write!(f, "Int({val})"),
+            Self::Bool(val) => write!(f, "Bool({val})"),
+        }
+    }
+}
+
+impl Display for Primative {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Primative::Int(val) => write!(f, "{}", val),
@@ -128,10 +152,7 @@ pub struct Prefix {
 impl Node for Prefix {}
 
 impl Prefix {
-    pub fn parse(parser: &mut Parser, _precedence: Precedence) -> anyhow::Result<Self>
-    where
-        Self: std::marker::Sized,
-    {
+    pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
         let operator = parser.current_token()?.clone();
         parser.next_token();
         let right = Expression::parse(parser, Precedence::Prefix)?;
@@ -151,13 +172,16 @@ impl Prefix {
 
 impl Debug for Prefix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({}{})", self.operator_str(), self.right)
+        f.debug_struct("Prefix")
+            .field("token", &self.operator_str())
+            .field("right", &self.right)
+            .finish()
     }
 }
 
 impl Display for Prefix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}{}", self.operator_str(), self.right)
+        write!(f, "({}{})", self.operator_str(), self.right)
     }
 }
 
@@ -181,7 +205,7 @@ impl Infix {
             Token::NotEqual => "!=",
             Token::LT => "<",
             Token::GT => ">",
-            _ => unreachable!("only Bang and Minus are allowed prefixes"),
+            _ => unreachable!("unallowed infix operator {:?}", self.token),
         }
     }
 
@@ -201,13 +225,17 @@ impl Infix {
 
 impl Debug for Infix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({} {} {})", self.left, self.operator_str(), self.right)
+        f.debug_struct("Infix")
+            .field("token", &self.operator_str())
+            .field("left", &self.left)
+            .field("right", &self.right)
+            .finish()
     }
 }
 
 impl Display for Infix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {} {}", self.left, self.operator_str(), self.right)
+        write!(f, "({} {} {})", self.left, self.operator_str(), self.right)
     }
 }
 
@@ -243,6 +271,21 @@ mod test {
         };
     }
 
+    macro_rules! snapshot {
+        ($name:tt, $input:expr) => {
+            #[test]
+            fn $name() {
+                let statements = parse($input);
+                let first = &statements[0];
+                insta::with_settings!({
+                    description => $input,
+                }, {
+                    insta::assert_display_snapshot!(first);
+                })
+            }
+        };
+    }
+
     macro_rules! snapshot_debug {
         ($name:tt, $input:expr) => {
             #[test]
@@ -274,4 +317,34 @@ mod test {
     snapshot_debug!(infix_expr_6, "true != false;");
     snapshot_debug!(infix_expr_7, "5 < 6");
     snapshot_debug!(infix_expr_8, "7 > 6");
+    snapshot_debug!(infix_expr_9, "\"foo\" != \"bar\"");
+
+    snapshot!(operator_precedence_1, "-a * b");
+    snapshot!(operator_precedence_2, "!-a");
+    snapshot!(operator_precedence_3, "a + b + c");
+    snapshot!(operator_precedence_4, "a + b - c");
+    snapshot!(operator_precedence_5, "a * b * c");
+    snapshot!(operator_precedence_6, "a * b / c");
+    snapshot!(operator_precedence_7, "a + b / c");
+    snapshot!(operator_precedence_8, "a + b * c + d / e - f");
+    snapshot!(operator_precedence_9, "5 > 4 == 3 < 4");
+    snapshot!(operator_precedence_10, "5 < 4 != 3 > 4");
+    snapshot!(operator_precedence_11, "3 + 4 * 5 == 3 * 1 + 4 * 5");
+    snapshot!(operator_precedence_12, "true");
+    snapshot!(operator_precedence_13, "false");
+    snapshot!(operator_precedence_14, "3 > 5 == false");
+    snapshot!(operator_precedence_15, "3 < 5 == true");
+    snapshot!(operator_precedence_16, "1 + (2 + 3) + 4");
+    snapshot!(operator_precedence_17, "(5 + 5) * 2");
+    snapshot!(operator_precedence_18, "2 / (5 + 5)");
+    snapshot!(operator_precedence_19, "-(5 + 5)");
+    snapshot!(operator_precedence_20, "!(true == true)");
+    // snapshot!(operator_precedence_21, "a + add(b * c) + d");
+    // snapshot!(
+    //     operator_precedence_22,
+    //     "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))"
+    // );
+    // snapshot!(operator_precedence_23, "add(a + b + c * d / f + g)");
+    // snapshot!(operator_precedence_24, "a * [1, 2, 3, 4][b * c] * d");
+    // snapshot!(operator_precedence_25, "add(a * b[2], b[1], 2 * [1, 2][1])");
 }

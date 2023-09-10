@@ -86,8 +86,6 @@ impl Node for Return {}
 
 impl Return {
     pub fn parse(parser: &mut Parser) -> anyhow::Result<Self>
-    where
-        Self: std::marker::Sized,
     {
         parser.next_token();
         let value = Expression::parse(parser, Precedence::Lowest)?;
