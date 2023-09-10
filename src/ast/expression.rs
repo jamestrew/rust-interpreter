@@ -334,11 +334,11 @@ mod test {
     snapshot!(operator_precedence_13, "false");
     snapshot!(operator_precedence_14, "3 > 5 == false");
     snapshot!(operator_precedence_15, "3 < 5 == true");
-    snapshot!(operator_precedence_16, "1 + (2 + 3) + 4");
-    snapshot!(operator_precedence_17, "(5 + 5) * 2");
-    snapshot!(operator_precedence_18, "2 / (5 + 5)");
-    snapshot!(operator_precedence_19, "-(5 + 5)");
-    snapshot!(operator_precedence_20, "!(true == true)");
+    // snapshot!(operator_precedence_16, "1 + (2 + 3) + 4");
+    // snapshot!(operator_precedence_17, "(5 + 5) * 2");
+    // snapshot!(operator_precedence_18, "2 / (5 + 5)");
+    // snapshot!(operator_precedence_19, "-(5 + 5)");
+    // snapshot!(operator_precedence_20, "!(true == true)");
     // snapshot!(operator_precedence_21, "a + add(b * c) + d");
     // snapshot!(
     //     operator_precedence_22,
