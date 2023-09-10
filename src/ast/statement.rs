@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
 use anyhow::anyhow;
 
@@ -7,7 +7,7 @@ use super::Node;
 use crate::lexer::Token;
 use crate::parser::*;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub enum Statement {
     Let(Let),
     Return(Return),
@@ -31,6 +31,18 @@ impl Statement {
     }
 }
 
+impl Debug for Statement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Let(val) => write!(f, "{:?}", val),
+            Self::Return(val) => write!(f, "{:?}", val),
+            Self::ExpressionStatement(arg0) => {
+                f.debug_tuple("ExpressionStatement").field(arg0).finish()
+            }
+        }
+    }
+}
+
 impl Display for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
@@ -42,7 +54,7 @@ impl Display for Statement {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Let {
     token: Token,
     name: Identifier,
@@ -70,13 +82,22 @@ impl Let {
     }
 }
 
+impl Debug for Let {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Let")
+            .field("name", &self.name)
+            .field("value", &self.value)
+            .finish()
+    }
+}
+
 impl Display for Let {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "let {} = {};", self.name, self.value)
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Return {
     token: Token,
     value: Expression,
@@ -85,8 +106,7 @@ pub struct Return {
 impl Node for Return {}
 
 impl Return {
-    pub fn parse(parser: &mut Parser) -> anyhow::Result<Self>
-    {
+    pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
         parser.next_token();
         let value = Expression::parse(parser, Precedence::Lowest)?;
         parser.swallow_semicolons();
@@ -94,6 +114,14 @@ impl Return {
             token: Token::Return,
             value,
         })
+    }
+}
+
+impl Debug for Return {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Return")
+            .field("value", &self.value)
+            .finish()
     }
 }
 
