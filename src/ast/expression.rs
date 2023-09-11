@@ -26,6 +26,12 @@ impl Expression {
             Token::Str(s) => Expression::StringLiteral(s.clone()),
             Token::Identifier(_) => Expression::Identifier(Identifier::parse(parser)?),
             Token::Minus | Token::Bang => Expression::Prefix(Prefix::parse(parser)?),
+            Token::LParen => {
+                parser.next_token();
+                let expr = Expression::parse(parser, Precedence::Lowest)?;
+                parser.expect_peek(Token::RParen)?;
+                expr
+            }
             _ => todo!("Expression::parse for {:?}", token),
         };
 
@@ -334,11 +340,11 @@ mod test {
     snapshot!(operator_precedence_13, "false");
     snapshot!(operator_precedence_14, "3 > 5 == false");
     snapshot!(operator_precedence_15, "3 < 5 == true");
-    // snapshot!(operator_precedence_16, "1 + (2 + 3) + 4");
-    // snapshot!(operator_precedence_17, "(5 + 5) * 2");
-    // snapshot!(operator_precedence_18, "2 / (5 + 5)");
-    // snapshot!(operator_precedence_19, "-(5 + 5)");
-    // snapshot!(operator_precedence_20, "!(true == true)");
+    snapshot!(operator_precedence_16, "1 + (2 + 3) + 4");
+    snapshot!(operator_precedence_17, "(5 + 5) * 2");
+    snapshot!(operator_precedence_18, "2 / (5 + 5)");
+    snapshot!(operator_precedence_19, "-(5 + 5)");
+    snapshot!(operator_precedence_20, "!(true == true)");
     // snapshot!(operator_precedence_21, "a + add(b * c) + d");
     // snapshot!(
     //     operator_precedence_22,

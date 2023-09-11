@@ -39,9 +39,9 @@ impl Parser {
         }
     }
 
-    pub fn peek_token_is(&self, match_token: Token) -> bool {
+    pub fn peek_token_is(&self, match_token: &Token) -> bool {
         if let Some(token) = &self.peek_token {
-            *token == match_token
+            *token == *match_token
         } else {
             false
         }
@@ -66,8 +66,17 @@ impl Parser {
         self.peek_token = self.lexer.next();
     }
 
+    pub fn expect_peek(&mut self, token: Token) -> anyhow::Result<()> {
+        if self.peek_token_is(&token) {
+            self.next_token();
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!("Expected next token {:?} not found", token))
+        }
+    }
+
     pub fn swallow_semicolons(&mut self) {
-        while self.peek_token_is(Token::Semicolon) {
+        while self.peek_token_is(&Token::Semicolon) {
             self.next_token();
         }
     }
