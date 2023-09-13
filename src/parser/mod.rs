@@ -24,16 +24,16 @@ impl Parser {
 
     pub fn parse_programe(&mut self) -> anyhow::Result<Program> {
         let mut program = Program::default();
-        while !self.current_token_is(Token::Eof) {
+        while !self.current_token_is(&Token::Eof) {
             program.statements.push(Statement::parse(self)?);
             self.next_token();
         }
         Ok(program)
     }
 
-    pub fn current_token_is(&self, match_token: Token) -> bool {
+    pub fn current_token_is(&self, match_token: &Token) -> bool {
         if let Some(token) = &self.current_token {
-            *token == match_token
+            *token == *match_token
         } else {
             false
         }

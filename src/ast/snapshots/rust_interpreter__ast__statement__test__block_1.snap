@@ -1,0 +1,8 @@
+---
+source: src/ast/statement.rs
+description: "{ return 5; }"
+expression: stmts
+---
+[
+    Block { token: LBrace, statements: [Return { value: Int(5) }] },
+]
