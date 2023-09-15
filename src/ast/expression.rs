@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Display};
 use std::rc::Rc;
 
-use super::Node;
+use super::*;
 use crate::lexer::Token;
 use crate::parser::*;
 
@@ -12,6 +12,7 @@ pub enum Expression {
     StringLiteral(Rc<str>),
     Prefix(Prefix),
     Infix(Infix),
+    If(If),
 }
 
 impl Node for Expression {}
@@ -51,6 +52,7 @@ impl Debug for Expression {
             Expression::StringLiteral(val) => write!(f, "StringLiteral({:?})", val),
             Expression::Prefix(val) => write!(f, "{:?}", val),
             Expression::Infix(val) => write!(f, "{:?}", val),
+            Expression::If(val) => write!(f, "{:?}", val),
         }
     }
 }
@@ -63,6 +65,7 @@ impl Display for Expression {
             Expression::StringLiteral(val) => format!("\"{}\"", val),
             Expression::Prefix(val) => val.to_string(),
             Expression::Infix(val) => val.to_string(),
+            Expression::If(val) => val.to_string(),
         };
         write!(f, "{}", s)
     }
@@ -242,6 +245,40 @@ impl Debug for Infix {
 impl Display for Infix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({} {} {})", self.left, self.operator_str(), self.right)
+    }
+}
+
+#[derive(PartialEq, Clone)]
+pub struct If {
+    token: Token,
+    condition: Box<Expression>,
+    consequence: Block,
+    alternative: Option<Block>,
+}
+
+impl Node for If {}
+
+impl Debug for If {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("If")
+            .field("condition", &self.condition)
+            .field("consequence", &self.consequence)
+            .field("alternative", &self.alternative)
+            .finish()
+    }
+}
+impl Display for If {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "if (")?;
+        write!(f, "{})", self.condition)?;
+        write!(f, "{{\n{}}}", self.consequence)?;
+
+        if let Some(alt) = &self.alternative {
+            write!(f, "else {{\n")?;
+            write!(f, "{}", alt)?;
+            write!(f, "}}")?;
+        }
+        Ok(())
     }
 }
 
