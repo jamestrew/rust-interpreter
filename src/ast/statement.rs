@@ -11,8 +11,8 @@ use crate::parser::*;
 pub enum Statement {
     Let(Let),
     Return(Return),
-    ExpressionStatement(Box<Expression>),
     Block(Block),
+    ExpressionStatement(Box<Expression>),
     // ...
 }
 
@@ -38,10 +38,10 @@ impl Debug for Statement {
         match self {
             Self::Let(val) => write!(f, "{:?}", val),
             Self::Return(val) => write!(f, "{:?}", val),
+            Self::Block(val) => write!(f, "{:?}", val),
             Self::ExpressionStatement(val) => {
                 f.debug_tuple("ExpressionStatement").field(val).finish()
             }
-            Self::Block(val) => write!(f, "{:?}", val),
         }
     }
 }
@@ -51,8 +51,8 @@ impl Display for Statement {
         let s = match self {
             Statement::Let(val) => val.to_string(),
             Statement::Return(val) => val.to_string(),
-            Statement::ExpressionStatement(val) => format!("{};", val),
             Statement::Block(val) => val.to_string(),
+            Statement::ExpressionStatement(val) => format!("{};", val),
         };
         write!(f, "{}", s)
     }
