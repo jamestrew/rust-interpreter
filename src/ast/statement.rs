@@ -174,9 +174,11 @@ impl Debug for Block {
 
 impl Display for Block {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{{")?;
         for stmt in &self.statements {
-            f.write_fmt(format_args!("{}\n", stmt))?;
+            f.write_fmt(format_args!("\t{}\n", stmt))?;
         }
+        writeln!(f, "}}")?;
         Ok(())
     }
 }
