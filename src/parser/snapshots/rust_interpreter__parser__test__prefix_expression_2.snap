@@ -1,0 +1,6 @@
+---
+source: src/parser/test.rs
+description: "!foobar;"
+expression: first
+---
+(!foobar);
