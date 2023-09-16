@@ -272,6 +272,8 @@ impl If {
         let mut alternative = None;
         if parser.peek_token_is(Token::Else) {
             parser.next_token();
+            parser.expect_peek(Token::LBrace)?;
+            println!("{:?}", parser.current_token()?);
             alternative = Some(Block::parse(parser)?);
         }
 
@@ -300,7 +302,7 @@ impl Display for If {
         write!(f, "\n{}", self.consequence)?;
 
         if let Some(alt) = &self.alternative {
-            write!(f, "else {}", alt)?;
+            write!(f, " else {}", alt)?;
         }
         Ok(())
     }
@@ -416,5 +418,6 @@ mod test {
     // snapshot!(operator_precedence_25, "add(a * b[2], b[1], 2 * [1, 2][1])");
 
     snapshot!(if_expr_1, "if (x < y) { x }");
-    // snapshot!(if_expr_2, "if (x < y) { x } else { y }");
+    snapshot!(if_expr_2, "if (x < y) { x } else { y }");
+    snapshot!(if_expr_3, "if (x < y) { x } else { let z = x + y; z }");
 }
