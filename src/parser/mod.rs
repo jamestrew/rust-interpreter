@@ -137,7 +137,15 @@ impl Parser {
     }
 
     fn parse_block(&mut self) -> anyhow::Result<Block> {
-        todo!("parse_block")
+        self.expect_current(Token::LBrace)?;
+
+        let mut statements = Vec::new();
+        while !self.current_token_is(Token::RBrace) && !self.current_token_is(Token::Eof) {
+            statements.push(self.parse_statement()?);
+            self.next_token();
+        }
+
+        Ok(Block::new(statements))
     }
 
     fn parse_expression(&mut self, precedence: Precedence) -> anyhow::Result<Expression> {

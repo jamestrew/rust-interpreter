@@ -159,6 +159,13 @@ pub struct Block {
 impl Node for Block {}
 
 impl Block {
+    pub fn new(statements: Vec<Statement>) -> Self {
+        Self {
+            token: Token::LBrace,
+            statements,
+        }
+    }
+
     pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
         parser.next_token();
         let mut statements = Vec::new();
@@ -208,7 +215,6 @@ mod test {
         assert!(!program.statements.is_empty());
         program.statements
     }
-
 
     macro_rules! assert_stmts {
         ($name:tt, $input:expr) => {

@@ -113,5 +113,9 @@ ss_display_stmt!(operator_precedence_18, "2 / (5 + 5)");
 ss_display_stmt!(operator_precedence_19, "-(5 + 5)");
 ss_display_stmt!(operator_precedence_20, "!(true == true)");
 
+ss_display_stmt!(if_expr_1, "if (x < y) { x }");
+ss_display_stmt!(if_expr_2, "if (x < y) { x } else { y }");
+ss_display_stmt!(if_expr_3, "if (x < y) { x } else { let z = x + y; z }");
+
 // assert_stmts!(block_1, "{ return 5; }");
 // assert_stmts!(block_2, "{ return 5; return true; }");

@@ -1,0 +1,12 @@
+---
+source: src/parser/test.rs
+description: "if (x < y) { x } else { let z = x + y; z }"
+expression: first
+---
+if (x < y)
+{
+	x;
+} else {
+	let z = (x + y);
+	z;
+};
