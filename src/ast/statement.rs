@@ -72,7 +72,7 @@ impl Let {
         parser.next_token();
         let name = Identifier::parse(parser)?;
         parser.next_token();
-        if parser.current_token_is(&Token::Equal) {
+        if parser.current_token_is(Token::Equal) {
             return Err(anyhow!("Expected `=` symbol in let statement"));
         }
         parser.next_token();
@@ -148,13 +148,10 @@ impl Block {
         parser.next_token();
         let mut statements = Vec::new();
 
-        while !parser.current_token_is(&Token::RBrace) {
-            println!("{:?}", parser.current_token());
+        while !parser.current_token_is(Token::RBrace) && !parser.current_token_is(Token::Eof) {
             statements.push(Statement::parse(parser)?);
             parser.next_token();
         }
-
-        println!("outside - {:?}", parser.current_token());
 
         Ok(Self {
             token: Token::LBrace,
@@ -178,7 +175,7 @@ impl Display for Block {
         for stmt in &self.statements {
             f.write_fmt(format_args!("\t{}\n", stmt))?;
         }
-        writeln!(f, "}}")?;
+        write!(f, "}}")?;
         Ok(())
     }
 }

@@ -33,6 +33,7 @@ impl Expression {
                 parser.expect_peek(Token::RParen)?;
                 expr
             }
+            Token::If => Expression::If(If::parse(parser)?),
             _ => todo!("Expression::parse for {:?}", token),
         };
 
@@ -258,6 +259,31 @@ pub struct If {
 
 impl Node for If {}
 
+impl If {
+    pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
+        parser.expect_peek(Token::LParen)?;
+        parser.next_token();
+        let condition = Expression::parse(parser, Precedence::Lowest)?;
+        parser.expect_peek(Token::RParen)?;
+
+        parser.expect_peek(Token::LBrace)?;
+        let consequence = Block::parse(parser)?;
+
+        let mut alternative = None;
+        if parser.peek_token_is(Token::Else) {
+            parser.next_token();
+            alternative = Some(Block::parse(parser)?);
+        }
+
+        Ok(Self {
+            token: Token::If,
+            condition: Box::new(condition),
+            consequence,
+            alternative,
+        })
+    }
+}
+
 impl Debug for If {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("If")
@@ -269,14 +295,12 @@ impl Debug for If {
 }
 impl Display for If {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "if (")?;
-        write!(f, "{})", self.condition)?;
-        write!(f, "{{\n{}}}", self.consequence)?;
+        write!(f, "if ")?;
+        write!(f, "{}", self.condition)?;
+        write!(f, "\n{}", self.consequence)?;
 
         if let Some(alt) = &self.alternative {
-            write!(f, "else {{\n")?;
-            write!(f, "{}", alt)?;
-            write!(f, "}}")?;
+            write!(f, "else {}", alt)?;
         }
         Ok(())
     }
@@ -390,4 +414,7 @@ mod test {
     // snapshot!(operator_precedence_23, "add(a + b + c * d / f + g)");
     // snapshot!(operator_precedence_24, "a * [1, 2, 3, 4][b * c] * d");
     // snapshot!(operator_precedence_25, "add(a * b[2], b[1], 2 * [1, 2][1])");
+
+    snapshot!(if_expr_1, "if (x < y) { x }");
+    // snapshot!(if_expr_2, "if (x < y) { x } else { y }");
 }

@@ -1,0 +1,9 @@
+---
+source: src/ast/expression.rs
+description: "if (x < y) { x }"
+expression: first
+---
+if (x < y)
+{
+	x;
+};
