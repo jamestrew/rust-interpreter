@@ -1,0 +1,6 @@
+---
+source: src/parser/test.rs
+description: (5 + 5) * 2
+expression: first
+---
+((5 + 5) * 2);

@@ -112,7 +112,7 @@ impl Parser {
         match self.current_token()? {
             Token::Let => self.parse_let(),
             Token::Return => self.parse_return(),
-            Token::LBrace => self.parse_block(),
+            Token::LBrace => Ok(Statement::Block(self.parse_block()?)),
             _ => Ok(Statement::ExpressionStatement(
                 self.parse_expression(Precedence::Lowest)?,
             )),
@@ -136,7 +136,7 @@ impl Parser {
         Ok(Statement::Return(Return::new(value)))
     }
 
-    fn parse_block(&mut self) -> anyhow::Result<Statement> {
+    fn parse_block(&mut self) -> anyhow::Result<Block> {
         todo!("parse_block")
     }
 
@@ -144,18 +144,18 @@ impl Parser {
         use {Expression as Expr, Token as T};
 
         let token = self.current_token()?;
-        let expr = match token {
+        let mut expr = match token {
             T::Int(_) | T::True | T::False => Expr::Primative(Primative::try_from(token)?),
             T::Str(s) => Expr::StringLiteral(s.clone()),
             T::Identifier(val) => Expr::Identifier(Identifier::from(val)),
             T::Minus | T::Bang => Expr::Prefix(self.parse_prefix()?),
-            T::LParen => todo!(),
-            T::If => todo!(),
+            T::If => Expr::If(self.parse_if()?),
+            T::LParen => self.parse_grouped()?,
             _ => unreachable!("parse_expression for {:?}", token),
         };
 
         while precedence < self.peek_precedence()? {
-            todo!()
+            expr = Expr::Infix(self.parse_infix(expr)?);
         }
 
         self.swallow_semicolons();
@@ -163,13 +163,50 @@ impl Parser {
     }
 
     fn parse_identifer(&self) -> anyhow::Result<Identifier> {
-        Ok(Identifier::try_from(self.current_token()?)?)
+        Identifier::try_from(self.current_token()?)
     }
 
     fn parse_prefix(&mut self) -> anyhow::Result<Prefix> {
-        let operator = self.current_token()?.clone();
+        let op_token = self.current_token()?.clone();
         self.next_token();
         let right = self.parse_expression(Precedence::Prefix)?;
-        Ok(Prefix::new(operator, right))
+        Ok(Prefix::new(op_token, right))
+    }
+
+    fn parse_infix(&mut self, left: Expression) -> anyhow::Result<Infix> {
+        self.next_token();
+        let op_token = self.current_token()?.clone();
+        let op_precedence = self.current_precedence()?;
+
+        self.next_token();
+        let right = self.parse_expression(op_precedence)?;
+        Ok(Infix::new(op_token, left, right))
+    }
+
+    fn parse_if(&mut self) -> anyhow::Result<If> {
+        self.expect_current(Token::If)?;
+        self.expect_current(Token::LParen)?;
+
+        let condition = self.parse_expression(Precedence::Lowest)?;
+        self.expect_peek(Token::RParen)?;
+
+        self.expect_peek(Token::LBrace)?;
+        let consequence = self.parse_block()?;
+
+        let mut alternative = None;
+        if self.peek_token_is(Token::Else) {
+            self.next_token();
+            self.expect_peek(Token::LBrace)?;
+            alternative = Some(self.parse_block()?);
+        }
+
+        Ok(If::new(condition, consequence, alternative))
+    }
+
+    fn parse_grouped(&mut self) -> anyhow::Result<Expression> {
+        self.expect_current(Token::LParen)?;
+        let expr = self.parse_expression(Precedence::Lowest)?;
+        self.expect_peek(Token::RParen)?;
+        Ok(expr)
     }
 }

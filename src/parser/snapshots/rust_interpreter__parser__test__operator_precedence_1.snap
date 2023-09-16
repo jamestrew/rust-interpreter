@@ -1,0 +1,6 @@
+---
+source: src/parser/test.rs
+description: "-a * b"
+expression: first
+---
+((-a) * b);

@@ -1,0 +1,6 @@
+---
+source: src/parser/test.rs
+description: a + b * c + d / e - f
+expression: first
+---
+(((a + (b * c)) + (d / e)) - f);

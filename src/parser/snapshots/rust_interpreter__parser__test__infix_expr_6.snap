@@ -1,0 +1,6 @@
+---
+source: src/parser/test.rs
+description: true != false;
+expression: first
+---
+(true != false);

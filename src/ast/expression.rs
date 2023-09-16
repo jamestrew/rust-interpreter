@@ -234,6 +234,14 @@ pub struct Infix {
 impl Node for Infix {}
 
 impl Infix {
+    pub fn new(op_token: Token, left: Expression, right: Expression) -> Self {
+        Self {
+            token: op_token,
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+
     fn operator_str(&self) -> &'static str {
         match self.token {
             Token::Minus => "-",
@@ -289,6 +297,15 @@ pub struct If {
 impl Node for If {}
 
 impl If {
+    pub fn new(condition: Expression, consequence: Block, alternative: Option<Block>) -> Self {
+        Self {
+            token: Token::If,
+            condition: Box::new(condition),
+            consequence,
+            alternative,
+        }
+    }
+
     pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
         parser.expect_peek(Token::LParen)?;
         parser.next_token();
@@ -302,7 +319,6 @@ impl If {
         if parser.peek_token_is(Token::Else) {
             parser.next_token();
             parser.expect_peek(Token::LBrace)?;
-            println!("{:?}", parser.current_token()?);
             alternative = Some(Block::parse(parser)?);
         }
 
