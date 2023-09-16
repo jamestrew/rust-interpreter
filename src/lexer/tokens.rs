@@ -40,3 +40,9 @@ pub enum Token {
 
     Eof,
 }
+
+impl AsRef<Token> for Token {
+    fn as_ref(&self) -> &Token {
+        self
+    }
+}

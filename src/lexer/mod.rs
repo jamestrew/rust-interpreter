@@ -16,6 +16,7 @@ enum TokenizerError {
 
 type Result<T> = std::result::Result<T, TokenizerError>;
 
+#[derive(Debug)]
 pub struct Lexer {
     input: Vec<u8>,
     position: usize,
