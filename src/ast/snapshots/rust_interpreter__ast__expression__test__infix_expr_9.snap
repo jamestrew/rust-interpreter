@@ -1,8 +1,0 @@
----
-source: src/ast/expression.rs
-description: "\"foo\" != \"bar\""
-expression: first
----
-ExpressionStatement(
-    Infix { token: "!=", left: StringLiteral("foo"), right: StringLiteral("bar") },
-)

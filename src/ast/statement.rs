@@ -1,37 +1,19 @@
 use std::fmt::{Debug, Display};
 
-use anyhow::anyhow;
-
 use super::expression::{Expression, Identifier};
 use super::Node;
 use crate::lexer::Token;
-use crate::parser::*;
 
 #[derive(PartialEq, Clone)]
 pub enum Statement {
     Let(Let),
     Return(Return),
     Block(Block),
-    ExpressionStatement(Box<Expression>),
+    ExpressionStatement(Expression),
     // ...
 }
 
 impl Node for Statement {}
-
-impl Statement {
-    pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
-        let token = parser.current_token()?;
-        match token {
-            Token::Let => Ok(Statement::Let(Let::parse(parser)?)),
-            Token::Return => Ok(Statement::Return(Return::parse(parser)?)),
-            Token::LBrace => Ok(Statement::Block(Block::parse(parser)?)),
-            _ => Ok(Statement::ExpressionStatement(Box::new(Expression::parse(
-                parser,
-                Precedence::Lowest,
-            )?))),
-        }
-    }
-}
 
 impl Debug for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -68,21 +50,12 @@ pub struct Let {
 impl Node for Let {}
 
 impl Let {
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
-        parser.next_token();
-        let name = Identifier::parse(parser)?;
-        parser.next_token();
-        if parser.current_token_is(Token::Equal) {
-            return Err(anyhow!("Expected `=` symbol in let statement"));
-        }
-        parser.next_token();
-        let value = Expression::parse(parser, Precedence::Lowest)?;
-        parser.swallow_semicolons();
-        Ok(Self {
+    pub fn new(name: Identifier, value: Expression) -> Self {
+        Self {
             token: Token::Let,
             name,
             value,
-        })
+        }
     }
 }
 
@@ -110,14 +83,11 @@ pub struct Return {
 impl Node for Return {}
 
 impl Return {
-    pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
-        parser.next_token();
-        let value = Expression::parse(parser, Precedence::Lowest)?;
-        parser.swallow_semicolons();
-        Ok(Self {
+    pub fn new(value: Expression) -> Self {
+        Self {
             token: Token::Return,
             value,
-        })
+        }
     }
 }
 
@@ -144,19 +114,11 @@ pub struct Block {
 impl Node for Block {}
 
 impl Block {
-    pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
-        parser.next_token();
-        let mut statements = Vec::new();
-
-        while !parser.current_token_is(Token::RBrace) && !parser.current_token_is(Token::Eof) {
-            statements.push(Statement::parse(parser)?);
-            parser.next_token();
-        }
-
-        Ok(Self {
+    pub fn new(statements: Vec<Statement>) -> Self {
+        Self {
             token: Token::LBrace,
             statements,
-        })
+        }
     }
 }
 
@@ -178,66 +140,4 @@ impl Display for Block {
         write!(f, "}}")?;
         Ok(())
     }
-}
-
-#[cfg(test)]
-mod test {
-    use super::Statement;
-    use crate::lexer::Lexer;
-    use crate::parser::Parser;
-
-    fn parse(input: &str) -> Vec<Statement> {
-        let lexer = Lexer::new(input);
-        let mut parser = Parser::new(lexer);
-        let program = parser.parse_programe().expect("valid program");
-        assert!(!program.statements.is_empty());
-        program.statements
-    }
-
-    #[test]
-    fn swallow_extra_semicolons() {
-        let stmts = parse("return true;;;;");
-        let stmt = stmts[0].to_string();
-        assert_eq!(stmt, "return true;");
-    }
-
-    macro_rules! assert_stmt {
-        ($name:tt, $input:expr) => {
-            #[test]
-            fn $name() {
-                let stmts = parse($input);
-                let stmt = stmts[0].to_string();
-                assert_eq!($input, stmt);
-            }
-        };
-    }
-
-    assert_stmt!(literal_let_statement_1, "let x = 5;");
-    assert_stmt!(literal_let_statement_2, "let y = 10;");
-    assert_stmt!(literal_let_statement_3, "let foobar = 838383;");
-    assert_stmt!(literal_let_statement_4, "let foo = \"bar\";");
-    assert_stmt!(literal_let_statement_5, "let foo = true;");
-    assert_stmt!(identifier_let_statement, "let foo = foobar;");
-
-    assert_stmt!(literal_return_statement_1, "return 5;");
-    assert_stmt!(literal_return_statement_2, "return true;");
-    assert_stmt!(literal_return_statement_3, "return \"foo\";");
-    assert_stmt!(identifier_return_statement, "return foobar;");
-
-    macro_rules! assert_stmts {
-        ($name:tt, $input:expr) => {
-            #[test]
-            fn $name() {
-                let stmts = parse($input);
-                insta::with_settings!({
-                    description => $input,
-                }, {
-                    insta::assert_debug_snapshot!(stmts);
-                })
-            }
-        };
-    }
-
-    assert_stmts!(block_1, "{ return 5; }");
-    assert_stmts!(block_2, "{ return 5; return true; }");
 }

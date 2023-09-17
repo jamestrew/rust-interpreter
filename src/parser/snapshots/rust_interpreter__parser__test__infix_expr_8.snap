@@ -1,0 +1,6 @@
+---
+source: src/parser/test.rs
+description: 7 > 6
+expression: first
+---
+(7 > 6);

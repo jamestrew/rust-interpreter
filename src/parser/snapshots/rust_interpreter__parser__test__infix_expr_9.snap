@@ -1,0 +1,6 @@
+---
+source: src/parser/test.rs
+description: "\"foo\" != \"bar\""
+expression: first
+---
+("foo" != "bar");

@@ -1,8 +1,0 @@
----
-source: src/ast/expression.rs
-description: "-5;"
-expression: first
----
-ExpressionStatement(
-    Prefix { token: "-", right: Int(5) },
-)

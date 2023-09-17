@@ -1,8 +1,0 @@
----
-source: src/ast/expression.rs
-description: "!foobar;"
-expression: first
----
-ExpressionStatement(
-    Prefix { token: "!", right: Identifier("foobar") },
-)

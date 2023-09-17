@@ -1,0 +1,11 @@
+---
+source: src/parser/test.rs
+description: "if (x < y) { x } else { y }"
+expression: first
+---
+if (x < y)
+{
+	x;
+} else {
+	y;
+};

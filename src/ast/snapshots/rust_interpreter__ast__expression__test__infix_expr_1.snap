@@ -1,8 +1,0 @@
----
-source: src/ast/expression.rs
-description: 5 + 6;
-expression: first
----
-ExpressionStatement(
-    Infix { token: "+", left: Int(5), right: Int(6) },
-)

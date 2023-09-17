@@ -1,6 +1,0 @@
----
-source: src/ast/expression.rs
-description: "-(5 + 5)"
-expression: first
----
-(-(5 + 5));
