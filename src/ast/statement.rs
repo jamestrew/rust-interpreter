@@ -1,11 +1,8 @@
 use std::fmt::{Debug, Display};
 
-use anyhow::anyhow;
-
 use super::expression::{Expression, Identifier};
 use super::Node;
 use crate::lexer::Token;
-use crate::parser::*;
 
 #[derive(PartialEq, Clone)]
 pub enum Statement {
@@ -17,21 +14,6 @@ pub enum Statement {
 }
 
 impl Node for Statement {}
-
-impl Statement {
-    pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
-        let token = parser.current_token()?;
-        match token {
-            Token::Let => Ok(Statement::Let(Let::parse(parser)?)),
-            Token::Return => Ok(Statement::Return(Return::parse(parser)?)),
-            Token::LBrace => Ok(Statement::Block(Block::parse(parser)?)),
-            _ => Ok(Statement::ExpressionStatement(Expression::parse(
-                parser,
-                Precedence::Lowest,
-            )?)),
-        }
-    }
-}
 
 impl Debug for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -75,23 +57,6 @@ impl Let {
             value,
         }
     }
-
-    fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
-        parser.next_token();
-        let name = Identifier::parse(parser)?;
-        parser.next_token();
-        if parser.current_token_is(Token::Equal) {
-            return Err(anyhow!("Expected `=` symbol in let statement"));
-        }
-        parser.next_token();
-        let value = Expression::parse(parser, Precedence::Lowest)?;
-        parser.swallow_semicolons();
-        Ok(Self {
-            token: Token::Let,
-            name,
-            value,
-        })
-    }
 }
 
 impl Debug for Let {
@@ -124,16 +89,6 @@ impl Return {
             value,
         }
     }
-
-    pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
-        parser.next_token();
-        let value = Expression::parse(parser, Precedence::Lowest)?;
-        parser.swallow_semicolons();
-        Ok(Self {
-            token: Token::Return,
-            value,
-        })
-    }
 }
 
 impl Debug for Return {
@@ -165,21 +120,6 @@ impl Block {
             statements,
         }
     }
-
-    pub fn parse(parser: &mut Parser) -> anyhow::Result<Self> {
-        parser.next_token();
-        let mut statements = Vec::new();
-
-        while !parser.current_token_is(Token::RBrace) && !parser.current_token_is(Token::Eof) {
-            statements.push(Statement::parse(parser)?);
-            parser.next_token();
-        }
-
-        Ok(Self {
-            token: Token::LBrace,
-            statements,
-        })
-    }
 }
 
 impl Debug for Block {
@@ -200,37 +140,4 @@ impl Display for Block {
         write!(f, "}}")?;
         Ok(())
     }
-}
-
-#[cfg(test)]
-mod test {
-    use super::Statement;
-    use crate::lexer::Lexer;
-    use crate::parser::Parser;
-
-    fn parse(input: &str) -> Vec<Statement> {
-        let lexer = Lexer::new(input);
-        let mut parser = Parser::new(lexer);
-        let program = parser.parse_programe().expect("valid program");
-        assert!(!program.statements.is_empty());
-        program.statements
-    }
-
-    macro_rules! assert_stmts {
-        ($name:tt, $input:expr) => {
-            #[ignore]
-            #[test]
-            fn $name() {
-                let stmts = parse($input);
-                insta::with_settings!({
-                    description => $input,
-                }, {
-                    insta::assert_debug_snapshot!(stmts);
-                })
-            }
-        };
-    }
-
-    assert_stmts!(block_1, "{ return 5; }");
-    assert_stmts!(block_2, "{ return 5; return true; }");
 }

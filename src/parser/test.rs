@@ -36,7 +36,6 @@ macro_rules! ss_display_stmt {
     };
 }
 
-#[allow(unused_macros)]
 macro_rules! ss_debug_stmts {
     ($name:tt, $input:expr) => {
         #[test]
@@ -112,10 +111,18 @@ ss_display_stmt!(operator_precedence_17, "(5 + 5) * 2");
 ss_display_stmt!(operator_precedence_18, "2 / (5 + 5)");
 ss_display_stmt!(operator_precedence_19, "-(5 + 5)");
 ss_display_stmt!(operator_precedence_20, "!(true == true)");
+// ss_display_stmt!(operator_precedence_21, "a + add(b * c) + d");
+// ss_display_stmt!(
+//     operator_precedence_22,
+//     "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))"
+// );
+// ss_display_stmt!(operator_precedence_23, "add(a + b + c * d / f + g)");
+// ss_display_stmt!(operator_precedence_24, "a * [1, 2, 3, 4][b * c] * d");
+// ss_display_stmt!(operator_precedence_25, "add(a * b[2], b[1], 2 * [1, 2][1])");
 
 ss_display_stmt!(if_expr_1, "if (x < y) { x }");
 ss_display_stmt!(if_expr_2, "if (x < y) { x } else { y }");
 ss_display_stmt!(if_expr_3, "if (x < y) { x } else { let z = x + y; z }");
 
-// assert_stmts!(block_1, "{ return 5; }");
-// assert_stmts!(block_2, "{ return 5; return true; }");
+ss_debug_stmts!(block_1, "{ return 5; }");
+ss_debug_stmts!(block_2, "{ return 5; return true; }");

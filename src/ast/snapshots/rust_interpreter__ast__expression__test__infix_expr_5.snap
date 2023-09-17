@@ -1,8 +1,0 @@
----
-source: src/ast/expression.rs
-description: true == true;
-expression: first
----
-ExpressionStatement(
-    Infix { token: "==", left: Bool(true), right: Bool(true) },
-)

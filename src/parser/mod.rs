@@ -94,7 +94,7 @@ impl Parser {
         }
     }
 
-    pub fn swallow_semicolons(&mut self) {
+    pub fn eat_semicolons(&mut self) {
         while self.peek_token_is(Token::Semicolon) {
             self.next_token();
         }
@@ -125,14 +125,14 @@ impl Parser {
         self.expect_peek(Token::Assign)?;
         self.expect_current(Token::Assign)?;
         let value = self.parse_expression(Precedence::Lowest)?;
-        self.swallow_semicolons();
+        self.eat_semicolons();
         Ok(Statement::Let(Let::new(name, value)))
     }
 
     fn parse_return(&mut self) -> anyhow::Result<Statement> {
         self.expect_current(Token::Return)?;
         let value = self.parse_expression(Precedence::Lowest)?;
-        self.swallow_semicolons();
+        self.eat_semicolons();
         Ok(Statement::Return(Return::new(value)))
     }
 
@@ -166,7 +166,7 @@ impl Parser {
             expr = Expr::Infix(self.parse_infix(expr)?);
         }
 
-        self.swallow_semicolons();
+        self.eat_semicolons();
         Ok(expr)
     }
 

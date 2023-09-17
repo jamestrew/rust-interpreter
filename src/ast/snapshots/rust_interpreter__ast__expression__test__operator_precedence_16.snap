@@ -1,6 +1,0 @@
----
-source: src/ast/expression.rs
-description: 1 + (2 + 3) + 4
-expression: first
----
-((1 + (2 + 3)) + 4);
