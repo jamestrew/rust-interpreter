@@ -1,11 +1,11 @@
 mod ast;
+pub mod eval;
 pub mod lexer;
 pub mod parser;
-pub mod eval;
 
+use ast::Statement;
 use lexer::Lexer;
 use parser::*;
-use ast::Statement;
 
 pub fn parse(input: &str) -> Vec<Statement> {
     let lexer = Lexer::new(input);
