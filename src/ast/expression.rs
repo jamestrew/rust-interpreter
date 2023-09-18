@@ -148,8 +148,20 @@ impl Prefix {
         match self.token {
             Token::Minus => "-",
             Token::Bang => "!",
-            _ => unreachable!("only Bang and Minus are allowed prefixes"),
+            _ => Self::unreachable_operator(),
         }
+    }
+
+    pub fn operator(&self) -> &Token {
+        &self.token
+    }
+
+    pub fn right(&self) -> &Expression {
+        &self.right
+    }
+
+    pub fn unreachable_operator() -> ! {
+        unreachable!("only Bang and Minus are allowed prefixes")
     }
 }
 
@@ -196,8 +208,24 @@ impl Infix {
             Token::NotEqual => "!=",
             Token::LT => "<",
             Token::GT => ">",
-            _ => unreachable!("unallowed infix operator {:?}", self.token),
+            _ => self.unreachable_operator(),
         }
+    }
+
+    pub fn operator(&self) -> &Token {
+        &self.token
+    }
+
+    pub fn left(&self) -> &Expression {
+        &self.left
+    }
+
+    pub fn right(&self) -> &Expression {
+        &self.right
+    }
+
+    pub fn unreachable_operator(&self) -> ! {
+        unreachable!("unallowed infix operator {:?}", self.token)
     }
 }
 

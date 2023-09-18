@@ -1,14 +1,4 @@
-use super::*;
-use crate::ast::*;
-use crate::lexer::Lexer;
-
-fn parse(input: &str) -> Vec<Statement> {
-    let lexer = Lexer::new(input);
-    let mut parser = Parser::new(lexer);
-    let program = parser.parse_programe().expect("valid program");
-    assert!(!program.statements.is_empty());
-    program.statements
-}
+use crate::parse;
 
 macro_rules! assert_stmt {
     ($name:tt, $input:expr) => {
