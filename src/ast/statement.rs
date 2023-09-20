@@ -120,6 +120,10 @@ impl Block {
             statements,
         }
     }
+
+    pub fn statements(&self) -> &[Statement] {
+        &self.statements
+    }
 }
 
 impl Debug for Block {

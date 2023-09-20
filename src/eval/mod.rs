@@ -7,7 +7,8 @@ pub enum Object {
     Int(i64),
     Bool(bool),
     StringLiteral(String),
-    Null,
+    Return,
+    Nil,
 }
 
 impl Object {
@@ -18,6 +19,16 @@ impl Object {
             FALSE
         }
     }
+
+    fn bool_value(&self) -> anyhow::Result<bool> {
+        match self {
+            Object::Int(val) => Ok(*val != 0),
+            Object::Bool(val) => Ok(*val),
+            Object::StringLiteral(val) => Ok(!val.is_empty()),
+            Object::Nil => Ok(false),
+            _ => Err(anyhow::anyhow!("not a bool value")),
+        }
+    }
 }
 
 impl Display for Object {
@@ -26,23 +37,35 @@ impl Display for Object {
             Object::Int(value) => write!(f, "{}", value),
             Object::Bool(value) => write!(f, "{}", value),
             Object::StringLiteral(value) => write!(f, "{}", value),
-            Object::Null => write!(f, "null"),
+            Object::Return => write!(f, "nil"),
+            Object::Nil => write!(f, "nil"),
         }
     }
 }
 
 const TRUE: Object = Object::Bool(true);
 const FALSE: Object = Object::Bool(false);
+const NIL: Object = Object::Nil;
 
-pub fn eval_program(program: &Program) -> Object {
-    if let Some(stmt) = program.statements.first() {
-        let obj = match stmt {
-            Statement::ExpressionStatement(val) => eval_expression(val),
-            _ => todo!("Program::Eval -> should only return `Return`"),
-        };
-        return obj;
+fn eval_statement(stmt: &Statement) -> Object {
+    match stmt {
+        Statement::Let(_) => todo!(),
+        Statement::Return(_) => todo!(),
+        Statement::Block(_) => todo!(),
+        Statement::ExpressionStatement(val) => eval_expression(val),
     }
-    unreachable!("Program must have at least one statement")
+}
+
+pub fn eval_statements(stmts: &[Statement]) -> Object {
+    let mut ret = NIL;
+    for stmt in stmts {
+        ret = eval_statement(stmt);
+        if let Object::Return = ret {
+            return ret;
+        }
+    }
+
+    ret
 }
 
 fn eval_expression(expr: &Expression) -> Object {
@@ -52,7 +75,7 @@ fn eval_expression(expr: &Expression) -> Object {
         Expression::StringLiteral(val) => Object::StringLiteral(val.to_string()),
         Expression::Prefix(val) => eval_prefix(val),
         Expression::Infix(val) => eval_infix(val),
-        Expression::If(_val) => todo!(),
+        Expression::If(val) => eval_if(val),
     }
 }
 
@@ -73,14 +96,7 @@ fn eval_prefix(expr: &Prefix) -> Object {
 
 fn eval_bang_prefix(right: &Expression) -> Object {
     let right = eval_expression(right);
-    let truthy = match right {
-        Object::Int(value) => value != 0,
-        Object::Bool(value) => value,
-        Object::StringLiteral(value) => !value.is_empty(),
-        Object::Null => false,
-    };
-
-    Object::new_bool(!truthy)
+    Object::new_bool(!right.bool_value().unwrap())
 }
 
 fn eval_minus_prefix(right: &Expression) -> Object {
@@ -97,13 +113,13 @@ fn eval_infix(expr: &Infix) -> Object {
     let op = expr.operator();
 
     match (&left, &right) {
-        (Object::Int(left), Object::Int(right)) => eval_integer_infix(*left, *right, &op),
+        (Object::Int(left), Object::Int(right)) => eval_integer_infix(*left, *right, op),
         (Object::StringLiteral(left), Object::StringLiteral(right)) => {
-            eval_string_infix(&left, &right, &op)
+            eval_string_infix(left, right, op)
         }
-        (Object::Bool(left), Object::Bool(right)) => eval_bool_infix(*left, *right, &op),
-        (Object::Int(left), Object::Bool(right)) => eval_bool_infix(*left != 0, *right, &op),
-        (Object::Bool(left), Object::Int(right)) => eval_bool_infix(*left, *right != 0, &op),
+        (Object::Bool(left), Object::Bool(right)) => eval_bool_infix(*left, *right, op),
+        (Object::Int(left), Object::Bool(right)) => eval_bool_infix(*left != 0, *right, op),
+        (Object::Bool(left), Object::Int(right)) => eval_bool_infix(*left, *right != 0, op),
         _ => todo!("eval_infix: handle rest as errors?"),
     }
 }
@@ -140,6 +156,20 @@ fn eval_bool_infix(left: bool, right: bool, operator: &Token) -> Object {
     }
 }
 
+fn eval_if(expr: &If) -> Object {
+    let condition = eval_expression(expr.condition());
+
+    if condition.bool_value().unwrap() {
+        return eval_statements(expr.consequence().statements());
+    }
+
+    if let Some(alternative) = expr.alternative() {
+        return eval_statements(alternative.statements());
+    }
+
+    NIL
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -159,7 +189,7 @@ mod test {
             #[test]
             fn $name() {
                 let program = parse($input);
-                assert_eq!(eval_program(&program).to_string(), $expect);
+                assert_eq!(eval_statements(&program.statements).to_string(), $expect);
             }
         };
     }
@@ -220,4 +250,12 @@ mod test {
     assert_stmt!(infix_bool_9, "(1 > 2) == false", "true");
 
     assert_stmt!(infix_string, "\"foo\" + \"bar\"", "foobar");
+
+    assert_stmt!(if_expression_1, "if (true) { 10 }", "10");
+    assert_stmt!(if_expression_2, "if (false) { 10 }", "nil");
+    assert_stmt!(if_expression_3, "if (1) { 10 }", "10");
+    assert_stmt!(if_expression_4, "if (1 < 2) { 10 }", "10");
+    assert_stmt!(if_expression_5, "if (1 > 2) { 10 }", "nil");
+    assert_stmt!(if_expression_6, "if (1 > 2) { 10 } else { 20 }", "20");
+    assert_stmt!(if_expression_7, "if (1 < 2) { 10 } else { 20 }", "10");
 }

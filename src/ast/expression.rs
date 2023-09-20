@@ -264,6 +264,18 @@ impl If {
             alternative,
         }
     }
+
+    pub fn condition(&self) -> &Expression {
+        &self.condition
+    }
+
+    pub fn consequence(&self) -> &Block {
+        &self.consequence
+    }
+
+    pub fn alternative(&self) -> Option<&Block> {
+        self.alternative.as_ref()
+    }
 }
 
 impl Debug for If {
