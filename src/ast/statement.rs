@@ -89,6 +89,10 @@ impl Return {
             value,
         }
     }
+
+    pub fn value(&self) -> &Expression {
+        &self.value
+    }
 }
 
 impl Debug for Return {

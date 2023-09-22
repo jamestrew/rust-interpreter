@@ -3,11 +3,13 @@ use std::fmt::Display;
 use crate::ast::*;
 use crate::lexer::Token;
 
+#[derive(Debug)]
 pub enum Object {
     Int(i64),
     Bool(bool),
     StringLiteral(String),
-    Return,
+    Return(Box<Object>),
+    Error(String),
     Nil,
 }
 
@@ -37,7 +39,8 @@ impl Display for Object {
             Object::Int(value) => write!(f, "{}", value),
             Object::Bool(value) => write!(f, "{}", value),
             Object::StringLiteral(value) => write!(f, "{}", value),
-            Object::Return => write!(f, "nil"),
+            Object::Return(value) => write!(f, "{}", value),
+            Object::Error(value) => write!(f, "{}", value),
             Object::Nil => write!(f, "nil"),
         }
     }
@@ -47,25 +50,40 @@ const TRUE: Object = Object::Bool(true);
 const FALSE: Object = Object::Bool(false);
 const NIL: Object = Object::Nil;
 
+pub fn eval_program(program: &Program) -> Object {
+    let mut ret = NIL;
+    for stmt in &program.statements {
+        ret = eval_statement(stmt);
+        if let Object::Return(val) = ret {
+            return *val;
+        }
+    }
+    ret
+}
+
 fn eval_statement(stmt: &Statement) -> Object {
     match stmt {
         Statement::Let(_) => todo!(),
-        Statement::Return(_) => todo!(),
-        Statement::Block(_) => todo!(),
+        Statement::Return(val) => eval_return(val),
+        Statement::Block(val) => eval_block(val),
         Statement::ExpressionStatement(val) => eval_expression(val),
     }
 }
 
-pub fn eval_statements(stmts: &[Statement]) -> Object {
+fn eval_block(stmt: &Block) -> Object {
     let mut ret = NIL;
-    for stmt in stmts {
+    for stmt in stmt.statements() {
         ret = eval_statement(stmt);
-        if let Object::Return = ret {
+        if let Object::Return(_) = ret {
             return ret;
         }
     }
-
     ret
+}
+
+fn eval_return(stmt: &Return) -> Object {
+    let expr = eval_expression(stmt.value());
+    Object::Return(Box::new(expr))
 }
 
 fn eval_expression(expr: &Expression) -> Object {
@@ -160,11 +178,11 @@ fn eval_if(expr: &If) -> Object {
     let condition = eval_expression(expr.condition());
 
     if condition.bool_value().unwrap() {
-        return eval_statements(expr.consequence().statements());
+        return eval_block(expr.consequence());
     }
 
     if let Some(alternative) = expr.alternative() {
-        return eval_statements(alternative.statements());
+        return eval_block(alternative);
     }
 
     NIL
@@ -189,7 +207,7 @@ mod test {
             #[test]
             fn $name() {
                 let program = parse($input);
-                assert_eq!(eval_statements(&program.statements).to_string(), $expect);
+                assert_eq!(eval_program(&program).to_string(), $expect);
             }
         };
     }
@@ -258,4 +276,36 @@ mod test {
     assert_stmt!(if_expression_5, "if (1 > 2) { 10 }", "nil");
     assert_stmt!(if_expression_6, "if (1 > 2) { 10 } else { 20 }", "20");
     assert_stmt!(if_expression_7, "if (1 < 2) { 10 } else { 20 }", "10");
+
+    assert_stmt!(return_statement_1, "return 10;", "10");
+    assert_stmt!(return_statement_2, "return 10; 9;", "10");
+    assert_stmt!(return_statement_3, "return 2 * 5; 9;", "10");
+    assert_stmt!(return_statement_4, "9; return 2 * 5; 9;", "10");
+    assert_stmt!(return_statement_5, "if (true) { return 10; }", "10");
+    assert_stmt!(
+        return_statement_6,
+        r#"
+    if (true) {
+        if (false) {
+            return 10;
+        }
+        return 1;
+    }
+    "#,
+        "1"
+    );
+    assert_stmt!(
+        return_statement_7,
+        r#"
+    if (true) {
+        if (true) {
+            return 10;
+        }
+        return 1;
+    }
+    "#,
+        "10"
+    );
+
+    assert_stmt!(block_statement_1, "{ 1; }", "1");
 }
