@@ -13,7 +13,7 @@ impl Environment {
         self.store.get(ident)
     }
 
-    pub fn set(&mut self, ident:  Identifier, obj: Object) {
+    pub fn set(&mut self, ident: Identifier, obj: Object) {
         self.store.insert(ident, obj);
     }
 }

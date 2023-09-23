@@ -70,7 +70,7 @@ fn eval_expression(expr: &Expression, env: &mut Environment) -> anyhow::Result<O
     }
 }
 
-fn eval_identifier(expr: &Identifier, env: &mut Environment) -> anyhow::Result<Object> {
+fn eval_identifier(expr: &Identifier, env: &Environment) -> anyhow::Result<Object> {
     match env.get(expr) {
         Some(obj) => Ok(obj.clone()),
         None => Err(anyhow::anyhow!("identifier not found: {}", expr)),

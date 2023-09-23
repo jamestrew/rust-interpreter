@@ -1,6 +1,5 @@
-use super::*;
+use super::{Environment, *};
 use crate::ast::Program;
-use super::Environment;
 
 fn parse(input: &str) -> Program {
     use crate::lexer::Lexer;
@@ -139,5 +138,9 @@ assert_stmt!(error_handling_4, "-true", "unknown operator: -BOOLEAN");
 assert_stmt!(let_stmt_1, "let a = 5; a;", "5");
 assert_stmt!(let_stmt_2, "let a = 5 * 5; a;", "25");
 assert_stmt!(let_stmt_3, "let a = 5; let b = a; b;", "5");
-assert_stmt!(let_stmt_4, "let a = 5; let b = a; let c = a + b + 5; c;", "15");
+assert_stmt!(
+    let_stmt_4,
+    "let a = 5; let b = a; let c = a + b + 5; c;",
+    "15"
+);
 assert_stmt!(let_stmt_5, "foobar;", "identifier not found: foobar");
