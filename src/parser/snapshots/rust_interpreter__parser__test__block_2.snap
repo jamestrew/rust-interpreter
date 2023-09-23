@@ -4,5 +4,5 @@ description: "{ return 5; return true; }"
 expression: stmts
 ---
 [
-    Block { token: LBrace, statements: [Return { value: Int(5) }, Return { value: Bool(true) }] },
+    Block { statements: [Return { value: Int(5) }, Return { value: Bool(true) }] },
 ]

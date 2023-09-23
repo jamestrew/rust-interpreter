@@ -159,6 +159,7 @@ impl Parser {
             T::Minus | T::Bang => Expr::Prefix(self.parse_prefix()?),
             T::If => Expr::If(self.parse_if()?),
             T::LParen => self.parse_grouped()?,
+            T::Function => Expr::Function(self.parse_function()?),
             _ => unreachable!("parse_expression for {:?}", token),
         };
 
@@ -216,5 +217,25 @@ impl Parser {
         let expr = self.parse_expression(Precedence::Lowest)?;
         self.expect_peek(Token::RParen)?;
         Ok(expr)
+    }
+
+    fn parse_function(&mut self) -> anyhow::Result<Function> {
+        self.expect_current(Token::Function)?;
+        self.expect_current(Token::LParen)?;
+
+        let mut params = Vec::new();
+        while !self.current_token_is(Token::RParen) {
+            params.push(self.parse_identifer()?);
+            self.next_token();
+            if self.current_token_is(Token::Comma) {
+                self.next_token();
+            }
+        }
+        self.expect_current(Token::RParen)?;
+
+        println!("{:?}", self.current_token());
+
+        let body = self.parse_block()?;
+        Ok(Function::new(params, body))
     }
 }

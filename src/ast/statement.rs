@@ -141,7 +141,6 @@ impl Block {
 impl Debug for Block {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Block")
-            .field("token", &self.token)
             .field("statements", &self.statements)
             .finish()
     }

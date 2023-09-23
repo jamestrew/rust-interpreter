@@ -67,6 +67,7 @@ fn eval_expression(expr: &Expression, env: &mut Environment) -> anyhow::Result<O
         Expression::Prefix(val) => eval_prefix(val, env),
         Expression::Infix(val) => eval_infix(val, env),
         Expression::If(val) => eval_if(val, env),
+        Expression::Function(_val) => todo!(),
     }
 }
 

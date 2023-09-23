@@ -4,5 +4,5 @@ description: "{ return 5; }"
 expression: stmts
 ---
 [
-    Block { token: LBrace, statements: [Return { value: Int(5) }] },
+    Block { statements: [Return { value: Int(5) }] },
 ]

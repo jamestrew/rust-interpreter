@@ -1,0 +1,10 @@
+---
+source: src/parser/test.rs
+description: "fn(x, y, z) { return x; }"
+expression: stmts
+---
+[
+    ExpressionStatement(
+        Function { params: [Identifier("x"), Identifier("y"), Identifier("z")], body: Block { statements: [Return { value: Identifier("x") }] } },
+    ),
+]

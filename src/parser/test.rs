@@ -116,3 +116,7 @@ ss_display_stmt!(if_expr_3, "if (x < y) { x } else { let z = x + y; z }");
 
 ss_debug_stmts!(block_1, "{ return 5; }");
 ss_debug_stmts!(block_2, "{ return 5; return true; }");
+
+ss_debug_stmts!(fn_expr_1, "fn() {}");
+ss_debug_stmts!(fn_expr_2, "fn(x) {}");
+ss_debug_stmts!(fn_expr_3, "fn(x, y, z) { return x; }");

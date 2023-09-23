@@ -1,0 +1,10 @@
+---
+source: src/parser/test.rs
+description: "fn() {}"
+expression: stmts
+---
+[
+    ExpressionStatement(
+        Function { params: [], body: Block { statements: [] } },
+    ),
+]
