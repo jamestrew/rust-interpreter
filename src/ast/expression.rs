@@ -198,8 +198,8 @@ impl Infix {
         }
     }
 
-    fn operator_str(&self) -> &'static str {
-        match self.token {
+    pub fn operator_str(&self) -> &'static str {
+        match &self.token {
             Token::Minus => "-",
             Token::Plus => "+",
             Token::Asterisk => "*",
@@ -208,7 +208,7 @@ impl Infix {
             Token::NotEqual => "!=",
             Token::LT => "<",
             Token::GT => ">",
-            _ => self.unreachable_operator(),
+            token => Infix::unreachable_operator(token),
         }
     }
 
@@ -224,8 +224,8 @@ impl Infix {
         &self.right
     }
 
-    pub fn unreachable_operator(&self) -> ! {
-        unreachable!("unallowed infix operator {:?}", self.token)
+    pub fn unreachable_operator(token: &Token) -> ! {
+        unreachable!("unallowed infix operator {:?}", token)
     }
 }
 
