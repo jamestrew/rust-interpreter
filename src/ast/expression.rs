@@ -43,9 +43,8 @@ impl Display for Expression {
     }
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct Identifier {
-    token: Token,
     value: Rc<str>,
 }
 
@@ -54,7 +53,6 @@ impl Node for Identifier {}
 impl From<&Rc<str>> for Identifier {
     fn from(value: &Rc<str>) -> Self {
         Self {
-            token: Token::Identifier(value.clone()),
             value: value.clone(),
         }
     }
@@ -66,7 +64,6 @@ impl<'a> TryFrom<&'a Token> for Identifier {
     fn try_from(token: &'a Token) -> anyhow::Result<Self> {
         if let Token::Identifier(ident) = token {
             Ok(Self {
-                token: token.clone(),
                 value: ident.clone(),
             })
         } else {

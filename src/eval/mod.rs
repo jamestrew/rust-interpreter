@@ -1,77 +1,18 @@
+mod environment;
+mod object;
 #[cfg(test)]
 mod test;
 
-use std::fmt::Display;
+use object::*;
 
+use self::environment::Environment;
 use crate::ast::*;
 use crate::lexer::Token;
 
-#[derive(Debug)]
-pub enum Object {
-    Int(i64),
-    Bool(bool),
-    String(String),
-    Return(Box<Object>),
-    Error(String),
-    Nil,
-}
-
-impl Object {
-    fn new_bool(val: bool) -> Object {
-        if val {
-            TRUE
-        } else {
-            FALSE
-        }
-    }
-
-    fn bool_value(&self) -> anyhow::Result<bool> {
-        match self {
-            Object::Int(val) => Ok(*val != 0),
-            Object::Bool(val) => Ok(*val),
-            Object::String(val) => Ok(!val.is_empty()),
-            Object::Nil => Ok(false),
-            _ => Err(anyhow::anyhow!("not a bool value")),
-        }
-    }
-
-    fn new_eror(err: anyhow::Error) -> Object {
-        Self::Error(err.to_string())
-    }
-
-    fn type_str(&self) -> &'static str {
-        match self {
-            Object::Int(_) => "INTEGER",
-            Object::Bool(_) => "BOOLEAN",
-            Object::String(_) => "STRING",
-            Object::Return(_) => "RETURN",
-            Object::Error(_) => "ERROR",
-            Object::Nil => "NIL",
-        }
-    }
-}
-
-impl Display for Object {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Object::Int(value) => write!(f, "{}", value),
-            Object::Bool(value) => write!(f, "{}", value),
-            Object::String(value) => write!(f, "{}", value),
-            Object::Return(value) => write!(f, "{}", value),
-            Object::Error(value) => write!(f, "{}", value),
-            Object::Nil => write!(f, "nil"),
-        }
-    }
-}
-
-const TRUE: Object = Object::Bool(true);
-const FALSE: Object = Object::Bool(false);
-const NIL: Object = Object::Nil;
-
-pub fn eval_program(program: &Program) -> Object {
+pub fn eval_program(program: &Program, mut env: Environment) -> Object {
     let mut ret = NIL;
     for stmt in &program.statements {
-        let stmt = eval_statement(stmt);
+        let stmt = eval_statement(stmt, &mut env);
         match stmt {
             Ok(stmt) => {
                 match stmt {
@@ -87,19 +28,25 @@ pub fn eval_program(program: &Program) -> Object {
     ret
 }
 
-fn eval_statement(stmt: &Statement) -> anyhow::Result<Object> {
+fn eval_statement(stmt: &Statement, env: &mut Environment) -> anyhow::Result<Object> {
     match stmt {
-        Statement::Let(_) => todo!(),
-        Statement::Return(val) => eval_return(val),
-        Statement::Block(val) => eval_block(val),
-        Statement::ExpressionStatement(val) => eval_expression(val),
+        Statement::Let(val) => eval_let(val, env),
+        Statement::Return(val) => eval_return(val, env),
+        Statement::Block(val) => eval_block(val, env),
+        Statement::ExpressionStatement(val) => eval_expression(val, env),
     }
 }
 
-fn eval_block(stmt: &Block) -> anyhow::Result<Object> {
+fn eval_let(stmt: &Let, env: &mut Environment) -> anyhow::Result<Object> {
+    let value: Object = eval_expression(stmt.value(), env)?;
+    env.set(stmt.name().clone(), value.clone());
+    Ok(value)
+}
+
+fn eval_block(stmt: &Block, env: &mut Environment) -> anyhow::Result<Object> {
     let mut ret = NIL;
     for stmt in stmt.statements() {
-        ret = eval_statement(stmt)?;
+        ret = eval_statement(stmt, env)?;
         if let Object::Return(_) = ret {
             return Ok(ret);
         }
@@ -107,19 +54,26 @@ fn eval_block(stmt: &Block) -> anyhow::Result<Object> {
     Ok(ret)
 }
 
-fn eval_return(stmt: &Return) -> anyhow::Result<Object> {
-    let expr = eval_expression(stmt.value())?;
+fn eval_return(stmt: &Return, env: &mut Environment) -> anyhow::Result<Object> {
+    let expr = eval_expression(stmt.value(), env)?;
     Ok(Object::Return(Box::new(expr)))
 }
 
-fn eval_expression(expr: &Expression) -> anyhow::Result<Object> {
+fn eval_expression(expr: &Expression, env: &mut Environment) -> anyhow::Result<Object> {
     match expr {
-        Expression::Identifier(_val) => todo!(),
+        Expression::Identifier(val) => eval_identifier(val, env),
         Expression::Primative(val) => Ok(eval_primative(val)),
         Expression::StringLiteral(val) => Ok(Object::String(val.to_string())),
-        Expression::Prefix(val) => eval_prefix(val),
-        Expression::Infix(val) => eval_infix(val),
-        Expression::If(val) => eval_if(val),
+        Expression::Prefix(val) => eval_prefix(val, env),
+        Expression::Infix(val) => eval_infix(val, env),
+        Expression::If(val) => eval_if(val, env),
+    }
+}
+
+fn eval_identifier(expr: &Identifier, env: &mut Environment) -> anyhow::Result<Object> {
+    match env.get(expr) {
+        Some(obj) => Ok(obj.clone()),
+        None => Err(anyhow::anyhow!("identifier not found: {}", expr)),
     }
 }
 
@@ -130,30 +84,30 @@ fn eval_primative(expr: &Primative) -> Object {
     }
 }
 
-fn eval_prefix(expr: &Prefix) -> anyhow::Result<Object> {
+fn eval_prefix(expr: &Prefix, env: &mut Environment) -> anyhow::Result<Object> {
     match expr.operator() {
-        Token::Bang => eval_bang_prefix(expr.right()),
-        Token::Minus => eval_minus_prefix(expr.right()),
+        Token::Bang => eval_bang_prefix(expr.right(), env),
+        Token::Minus => eval_minus_prefix(expr.right(), env),
         _ => Prefix::unreachable_operator(),
     }
 }
 
-fn eval_bang_prefix(right: &Expression) -> anyhow::Result<Object> {
-    let right = eval_expression(right)?;
+fn eval_bang_prefix(right: &Expression, env: &mut Environment) -> anyhow::Result<Object> {
+    let right = eval_expression(right, env)?;
     Ok(Object::new_bool(!right.bool_value()?))
 }
 
-fn eval_minus_prefix(right: &Expression) -> anyhow::Result<Object> {
-    let right = eval_expression(right)?;
+fn eval_minus_prefix(right: &Expression, env: &mut Environment) -> anyhow::Result<Object> {
+    let right = eval_expression(right, env)?;
     if let Object::Int(value) = right {
         return Ok(Object::Int(-value));
     }
     Err(anyhow::anyhow!("unknown operator: -{}", right.type_str()))
 }
 
-fn eval_infix(expr: &Infix) -> anyhow::Result<Object> {
-    let left = eval_expression(expr.left())?;
-    let right = eval_expression(expr.right())?;
+fn eval_infix(expr: &Infix, env: &mut Environment) -> anyhow::Result<Object> {
+    let left = eval_expression(expr.left(), env)?;
+    let right = eval_expression(expr.right(), env)?;
     let op = expr.operator();
 
     let ret = match (&left, &right) {
@@ -210,15 +164,15 @@ fn eval_bool_infix(left: bool, right: bool, operator: &Token) -> anyhow::Result<
     Ok(ret)
 }
 
-fn eval_if(expr: &If) -> anyhow::Result<Object> {
-    let condition = eval_expression(expr.condition())?;
+fn eval_if(expr: &If, env: &mut Environment) -> anyhow::Result<Object> {
+    let condition = eval_expression(expr.condition(), env)?;
 
     if condition.bool_value()? {
-        return eval_block(expr.consequence());
+        return eval_block(expr.consequence(), env);
     }
 
     if let Some(alternative) = expr.alternative() {
-        return eval_block(alternative);
+        return eval_block(alternative, env);
     }
 
     Ok(NIL)

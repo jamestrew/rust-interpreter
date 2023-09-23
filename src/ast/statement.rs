@@ -57,6 +57,14 @@ impl Let {
             value,
         }
     }
+
+    pub fn name(&self) -> &Identifier {
+        &self.name
+    }
+
+    pub fn value(&self) -> &Expression {
+        &self.value
+    }
 }
 
 impl Debug for Let {
