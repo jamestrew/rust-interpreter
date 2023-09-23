@@ -1,0 +1,10 @@
+---
+source: src/parser/test.rs
+description: add()
+expression: stmts
+---
+[
+    ExpressionStatement(
+        Call { function: Identifier("add"), args: [] },
+    ),
+]

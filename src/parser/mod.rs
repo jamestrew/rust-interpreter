@@ -164,7 +164,20 @@ impl Parser {
         };
 
         while precedence < self.peek_precedence()? {
-            expr = Expr::Infix(self.parse_infix(expr)?);
+            expr = match self.peek_token()? {
+                T::Assign
+                | T::Plus
+                | T::Minus
+                | T::Asterisk
+                | T::ForwardSlash
+                | T::Equal
+                | T::NotEqual
+                | T::LT
+                | T::GT
+                | T::Eof => Expr::Infix(self.parse_infix(expr)?),
+                T::LParen => Expr::Call(self.parse_call(expr)?),
+                token => unreachable!("invalid token {:?}", token),
+            };
         }
 
         self.eat_semicolons();
@@ -237,5 +250,21 @@ impl Parser {
 
         let body = self.parse_block()?;
         Ok(Function::new(params, body))
+    }
+
+    fn parse_call(&mut self, func: Expression) -> anyhow::Result<Call> {
+        self.expect_peek(Token::LParen)?;
+        self.next_token();
+
+        let mut args = Vec::new();
+        while !self.current_token_is(Token::RParen) {
+            args.push(self.parse_expression(Precedence::Lowest)?);
+            self.next_token();
+            if self.current_token_is(Token::Comma) {
+                self.next_token()
+            }
+        }
+
+        Ok(Call::new(func, args))
     }
 }

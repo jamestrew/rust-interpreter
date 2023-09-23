@@ -120,3 +120,13 @@ ss_debug_stmts!(block_2, "{ return 5; return true; }");
 ss_debug_stmts!(fn_expr_1, "fn() {}");
 ss_debug_stmts!(fn_expr_2, "fn(x) {}");
 ss_debug_stmts!(fn_expr_3, "fn(x, y, z) { return x; }");
+
+ss_debug_stmts!(fn_call_debug_1, "add()");
+ss_debug_stmts!(fn_call_debug_2, "add(x)");
+ss_debug_stmts!(fn_call_debug_3, "add(x, y);");
+ss_debug_stmts!(fn_call_debug_4, "fn(x, y){ return x + y; }(1, 2);");
+
+ss_display_stmt!(fn_call_display_1, "add()");
+ss_display_stmt!(fn_call_display_2, "add(x)");
+ss_display_stmt!(fn_call_display_3, "add(x, y);");
+ss_display_stmt!(fn_call_display_4, "fn(x, y){ return x + y; }(1, 2);");

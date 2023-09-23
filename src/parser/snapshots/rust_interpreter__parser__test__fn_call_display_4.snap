@@ -1,0 +1,8 @@
+---
+source: src/parser/test.rs
+description: "fn(x, y){ return x + y; }(1, 2);"
+expression: first
+---
+fn(x,y) {
+	return (x + y);
+}(1,2);

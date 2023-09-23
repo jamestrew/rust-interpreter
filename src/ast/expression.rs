@@ -13,6 +13,7 @@ pub enum Expression {
     Infix(Infix),
     If(If),
     Function(Function),
+    Call(Call),
 }
 
 impl Node for Expression {}
@@ -27,6 +28,7 @@ impl Debug for Expression {
             Expression::Infix(val) => write!(f, "{:?}", val),
             Expression::If(val) => write!(f, "{:?}", val),
             Expression::Function(val) => write!(f, "{:?}", val),
+            Expression::Call(val) => write!(f, "{:?}", val),
         }
     }
 }
@@ -41,6 +43,7 @@ impl Display for Expression {
             Expression::Infix(val) => val.to_string(),
             Expression::If(val) => val.to_string(),
             Expression::Function(val) => val.to_string(),
+            Expression::Call(val) => val.to_string(),
         };
         write!(f, "{}", s)
     }
@@ -324,5 +327,35 @@ impl Display for Function {
             write!(f, "{}", param)?;
         }
         write!(f, ") {}", self.body)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Call {
+    function: Box<Expression>,
+    args: Vec<Expression>,
+}
+
+impl Node for Call {}
+
+impl Call {
+    pub fn new(function: Expression, args: Vec<Expression>) -> Self {
+        Self {
+            function: Box::new(function),
+            args,
+        }
+    }
+}
+
+impl Display for Call {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}(", self.function)?;
+        for (idx, arg) in self.args.iter().enumerate() {
+            if idx != 0 {
+                write!(f, ",")?;
+            }
+            write!(f, "{}", arg)?;
+        }
+        write!(f, ")")
     }
 }

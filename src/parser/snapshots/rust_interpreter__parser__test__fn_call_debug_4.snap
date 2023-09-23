@@ -1,0 +1,10 @@
+---
+source: src/parser/test.rs
+description: "fn(x, y){ return x + y; }(1, 2);"
+expression: stmts
+---
+[
+    ExpressionStatement(
+        Call { function: Function { params: [Identifier("x"), Identifier("y")], body: Block { statements: [Return { value: Infix { token: "+", left: Identifier("x"), right: Identifier("y") } }] } }, args: [Int(1), Int(2)] },
+    ),
+]
