@@ -1,9 +1,10 @@
+use std::rc::Rc;
 #[derive(Debug, Clone)]
 pub enum Object {
     Int(i64),
     Bool(bool),
     String(String),
-    Return(Box<Object>),
+    Return(Rc<Object>),
     Error(String),
     Nil,
 }

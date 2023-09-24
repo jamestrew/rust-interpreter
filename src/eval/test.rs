@@ -1,4 +1,8 @@
-use super::{Environment, *};
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use super::environment::Environment;
+use super::*;
 use crate::ast::Program;
 
 fn parse(input: &str) -> Program {
@@ -15,8 +19,9 @@ macro_rules! assert_stmt {
         #[test]
         fn $name() {
             let program = parse($input);
-            let env = Environment::default();
-            assert_eq!(eval_program(&program, env).to_string(), $expect);
+            let env = Rc::new(RefCell::new(Environment::default()));
+            let output = eval_program(&program, &env).expect("valid program");
+            assert_eq!(output.to_string(), $expect);
         }
     };
 }
