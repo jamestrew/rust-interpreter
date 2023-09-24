@@ -1,0 +1,24 @@
+---
+source: src/eval/test.rs
+description: "fn(x) { x + 2; }"
+expression: output
+---
+Function(
+    Function {
+        params: [
+            Identifier("x"),
+        ],
+        body: Block {
+            statements: [
+                ExpressionStatement(
+                    Infix { token: "+", left: Identifier("x"), right: Int(2) },
+                ),
+            ],
+        },
+        env: RefCell {
+            value: Environment {
+                store: {},
+            },
+        },
+    },
+)

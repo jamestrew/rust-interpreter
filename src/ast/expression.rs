@@ -80,6 +80,14 @@ impl<'a> TryFrom<&'a Token> for Identifier {
     }
 }
 
+impl std::ops::Deref for Identifier {
+    type Target = Rc<str>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
 impl Debug for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Identifier({:?})", self.value)
@@ -314,6 +322,14 @@ impl Node for Function {}
 impl Function {
     pub fn new(params: Vec<Identifier>, body: Block) -> Self {
         Self { params, body }
+    }
+
+    pub fn params(&self) -> &[Identifier] {
+        &self.params
+    }
+
+    pub fn body(&self) -> &Block {
+        &self.body
     }
 }
 

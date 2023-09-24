@@ -8,7 +8,7 @@ use std::rc::Rc;
 use object::*;
 
 use self::environment::Env;
-use crate::ast::*;
+use crate::ast::{self, *};
 use crate::lexer::Token;
 
 type ObjResult = anyhow::Result<Rc<Object>>;
@@ -73,7 +73,7 @@ fn eval_expression(expr: &Expression, env: &Env) -> ObjResult {
         Expression::Prefix(val) => eval_prefix(val, env),
         Expression::Infix(val) => eval_infix(val, env),
         Expression::If(val) => eval_if(val, env),
-        Expression::Function(_val) => todo!(),
+        Expression::Function(val) => eval_function(val, env),
         Expression::Call(_val) => todo!(),
     }
 }
@@ -186,4 +186,8 @@ fn eval_if(expr: &If, env: &Env) -> ObjResult {
     }
 
     Ok(NIL.into())
+}
+
+fn eval_function(expr: &ast::Function, env: &Env) -> ObjResult {
+    Ok(Object::Function(object::Function::new(expr, env)).into())
 }

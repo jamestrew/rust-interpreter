@@ -26,6 +26,22 @@ macro_rules! assert_stmt {
     };
 }
 
+macro_rules! ss_debug_stmts {
+    ($name:tt, $input:expr) => {
+        #[test]
+        fn $name() {
+            let program = parse($input);
+            let env = Rc::new(RefCell::new(Environment::default()));
+            let output = eval_program(&program, &env).expect("valid program");
+            insta::with_settings!({
+                description => $input,
+            }, {
+                insta::assert_debug_snapshot!(output);
+            })
+        }
+    };
+}
+
 assert_stmt!(integer_1, "5", "5");
 assert_stmt!(integer_2, "5;", "5");
 
@@ -149,3 +165,5 @@ assert_stmt!(
     "15"
 );
 assert_stmt!(let_stmt_5, "foobar;", "identifier not found: foobar");
+
+ss_debug_stmts!(function_1, "fn(x) { x + 2; }");
