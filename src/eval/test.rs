@@ -1,7 +1,4 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
-use super::environment::Environment;
+use super::environment::new_env;
 use super::*;
 use crate::ast::Program;
 
@@ -19,7 +16,7 @@ macro_rules! assert_program {
         #[test]
         fn $name() {
             let program = parse($input);
-            let env = Rc::new(RefCell::new(Environment::default()));
+            let env = new_env(None);
             let output = eval_program(&program, &env).expect("valid program");
             assert_eq!(output.to_string(), $expect);
         }
@@ -31,7 +28,7 @@ macro_rules! ss_debug_stmts {
         #[test]
         fn $name() {
             let program = parse($input);
-            let env = Rc::new(RefCell::new(Environment::default()));
+            let env = new_env(None);
             let output = eval_program(&program, &env).expect("valid program");
             insta::with_settings!({
                 description => $input,

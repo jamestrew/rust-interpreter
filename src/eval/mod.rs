@@ -3,14 +3,13 @@ mod object;
 #[cfg(test)]
 mod test;
 
-use std::cell::RefCell;
 use std::rc::Rc;
 
 use object::*;
 
 use self::environment::Env;
 use crate::ast::{self, *};
-use crate::eval::environment::Environment;
+use crate::eval::environment::{new_env, Environment};
 use crate::lexer::Token;
 
 type ObjResult = anyhow::Result<Rc<Object>>;
@@ -45,8 +44,8 @@ fn eval_statement(stmt: &Statement, env: &Env) -> ObjResult {
 }
 
 fn eval_let(stmt: &Let, env: &Env) -> ObjResult {
-    let value = eval_expression(stmt.value(), &Rc::clone(env))?;
-    env.borrow_mut().set(stmt.name(), value.clone());
+    let value = eval_expression(stmt.value(), env)?;
+    env.borrow_mut().set(stmt.name(), Rc::clone(&value));
     Ok(value)
 }
 
@@ -63,7 +62,7 @@ fn eval_block(stmt: &Block, env: &Env) -> ObjResult {
 
 fn eval_return(stmt: &Return, env: &Env) -> ObjResult {
     let expr = eval_expression(stmt.value(), env)?;
-    Ok(Object::Return(expr.clone()).into())
+    Ok(Object::Return(Rc::clone(&expr)).into())
 }
 
 fn eval_expression(expr: &Expression, env: &Env) -> ObjResult {
@@ -81,7 +80,7 @@ fn eval_expression(expr: &Expression, env: &Env) -> ObjResult {
 
 fn eval_identifier(expr: &Identifier, env: &Env) -> ObjResult {
     match env.borrow().get(expr) {
-        Some(obj) => Ok(obj.clone()),
+        Some(obj) => Ok(Rc::clone(&obj)),
         None => Err(anyhow::anyhow!("identifier not found: {}", expr)),
     }
 }
@@ -212,7 +211,7 @@ fn eval_fn_call(expr: &Call, env: &Env) -> ObjResult {
         for (param, arg) in params.iter().zip(arg_objs) {
             env.set(param, Rc::clone(&arg))
         }
-        return eval_block(func.body(), &Rc::new(RefCell::new(env)));
+        return eval_block(func.body(), &new_env(Some(env)));
     }
 
     unreachable!("not a function")

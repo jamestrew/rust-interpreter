@@ -1,5 +1,4 @@
-use std::io::prelude::*;
-use std::io::{self, BufReader, Stdin, Stdout};
+use std::io::{self, BufRead, BufReader, Stdin, Stdout, Write};
 
 use rust_interpreter::lexer::Lexer;
 

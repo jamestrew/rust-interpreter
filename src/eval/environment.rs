@@ -7,6 +7,14 @@ use crate::ast::Identifier;
 
 pub type Env = Rc<RefCell<Environment>>;
 
+pub fn new_env(outer: Option<Environment>) -> Env {
+    let env = match outer {
+        Some(env) => env,
+        None => Environment::default(),
+    };
+    Rc::new(RefCell::new(env))
+}
+
 #[derive(Debug, Default)]
 pub struct Environment {
     store: HashMap<Identifier, Rc<Object>>,
