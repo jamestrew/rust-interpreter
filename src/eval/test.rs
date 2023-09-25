@@ -182,3 +182,15 @@ assert_program!(
     "26"
 );
 assert_program!(fn_call_6, "fn(x) { x; }(5)", "5");
+
+assert_program!(
+    closure,
+    "
+let newAdder = fn(x) {
+    fn(y) { x + y };
+};
+let addTwo = newAdder(2);
+addTwo(3);
+",
+    "5"
+);

@@ -15,7 +15,6 @@ use crate::lexer::Token;
 
 type ObjResult = anyhow::Result<Rc<Object>>;
 
-// not sure about returning Object vs ObjResult here
 pub fn eval_program(program: &Program, env: &Env) -> ObjResult {
     let mut ret = NIL.into();
     for stmt in &program.statements {
