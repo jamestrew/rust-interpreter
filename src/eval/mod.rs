@@ -3,12 +3,14 @@ mod object;
 #[cfg(test)]
 mod test;
 
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use object::*;
 
 use self::environment::Env;
 use crate::ast::{self, *};
+use crate::eval::environment::Environment;
 use crate::lexer::Token;
 
 type ObjResult = anyhow::Result<Rc<Object>>;
@@ -44,7 +46,7 @@ fn eval_statement(stmt: &Statement, env: &Env) -> ObjResult {
 }
 
 fn eval_let(stmt: &Let, env: &Env) -> ObjResult {
-    let value = eval_expression(stmt.value(), env)?;
+    let value = eval_expression(stmt.value(), &Rc::clone(env))?;
     env.borrow_mut().set(stmt.name(), value.clone());
     Ok(value)
 }
@@ -74,7 +76,7 @@ fn eval_expression(expr: &Expression, env: &Env) -> ObjResult {
         Expression::Infix(val) => eval_infix(val, env),
         Expression::If(val) => eval_if(val, env),
         Expression::Function(val) => eval_function(val, env),
-        Expression::Call(_val) => todo!(),
+        Expression::Call(val) => eval_fn_call(val, env),
     }
 }
 
@@ -190,4 +192,29 @@ fn eval_if(expr: &If, env: &Env) -> ObjResult {
 
 fn eval_function(expr: &ast::Function, env: &Env) -> ObjResult {
     Ok(Object::Function(object::Function::new(expr, env)).into())
+}
+
+fn eval_fn_call(expr: &Call, env: &Env) -> ObjResult {
+    let func: Rc<Object> = eval_expression(expr.function(), env)?;
+
+    let mut arg_objs = Vec::new();
+    for arg in expr.args() {
+        arg_objs.push(eval_expression(arg, env)?)
+    }
+
+    if let Object::Function(func) = func.as_ref() {
+        let mut env = Environment::new_enclosed(&Rc::clone(func.env()));
+
+        let params = func.params();
+        if params.len() != arg_objs.len() {
+            return Err(anyhow::anyhow!("mismatched arg and param count"));
+        }
+
+        for (param, arg) in params.iter().zip(arg_objs) {
+            env.set(param, Rc::clone(&arg))
+        }
+        return eval_block(func.body(), &Rc::new(RefCell::new(env)));
+    }
+
+    unreachable!("not a function")
 }

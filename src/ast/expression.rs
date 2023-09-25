@@ -361,6 +361,14 @@ impl Call {
             args,
         }
     }
+
+    pub fn function(&self) -> &Expression {
+        &self.function
+    }
+
+    pub fn args(&self) -> &[Expression] {
+        &self.args
+    }
 }
 
 impl Display for Call {

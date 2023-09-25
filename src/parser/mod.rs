@@ -246,8 +246,6 @@ impl Parser {
         }
         self.expect_current(Token::RParen)?;
 
-        println!("{:?}", self.current_token());
-
         let body = self.parse_block()?;
         Ok(Function::new(params, body))
     }

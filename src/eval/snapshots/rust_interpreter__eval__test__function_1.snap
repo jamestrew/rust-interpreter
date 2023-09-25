@@ -18,6 +18,7 @@ Function(
         env: RefCell {
             value: Environment {
                 store: {},
+                outer: None,
             },
         },
     },

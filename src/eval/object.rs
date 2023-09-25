@@ -72,7 +72,6 @@ impl std::fmt::Display for Object {
 pub struct Function {
     params: Vec<ast::Identifier>,
     body: ast::Block,
-    #[allow(dead_code)]
     env: Env,
 }
 
@@ -83,6 +82,18 @@ impl Function {
             body: func.body().clone(),
             env: env.clone(),
         }
+    }
+
+    pub fn params(&self) -> &[ast::Identifier] {
+        &self.params
+    }
+
+    pub fn body(&self) -> &ast::Block {
+        &self.body
+    }
+
+    pub fn env(&self) -> &Env {
+        &self.env
     }
 }
 
@@ -95,6 +106,6 @@ impl std::fmt::Display for Function {
             }
             write!(f, "{}", param)?;
         }
-        write!(f, ") {{\n{}\n}}", self.body)
+        write!(f, ") \n{}\n", self.body)
     }
 }
