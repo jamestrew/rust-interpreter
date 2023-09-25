@@ -1,6 +1,6 @@
 use std::io::{self, BufRead, BufReader, Stdin, Stdout, Write};
 
-use rust_interpreter::lexer::Lexer;
+use rust_interpreter::{eval, new_env};
 
 const PROMPT: &str = ">> ";
 
@@ -13,14 +13,15 @@ fn repl(stdin: Stdin, stdout: Stdout) -> io::Result<()> {
     let mut reader = BufReader::new(stdin);
     let mut line = String::new();
 
+    let env = new_env(None);
+
     loop {
         print!("{}", PROMPT);
         stdout.lock().flush().unwrap();
         reader.read_line(&mut line).unwrap();
 
-        let lexer = Lexer::new(&line);
-        for token in lexer {
-            println!("{:?}", token);
+        if let Some(s) = eval(&line, &env) {
+            println!("{}", s)
         }
 
         line.clear();

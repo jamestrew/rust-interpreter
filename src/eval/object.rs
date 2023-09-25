@@ -12,11 +12,13 @@ pub enum Object {
     Function(Function),
     Error(String),
     Nil,
+    Empty,
 }
 
 pub const TRUE: Object = Object::Bool(true);
 pub const FALSE: Object = Object::Bool(false);
 pub const NIL: Object = Object::Nil;
+pub const EMPTY: Object = Object::Empty;
 
 impl Object {
     pub fn new_bool(val: bool) -> Object {
@@ -50,6 +52,7 @@ impl Object {
             Object::Function(_) => "FUNCTION",
             Object::Error(_) => "ERROR",
             Object::Nil => "NIL",
+            Object::Empty => "EMPTY",
         }
     }
 }
@@ -64,6 +67,7 @@ impl std::fmt::Display for Object {
             Object::Function(value) => write!(f, "{}", value),
             Object::Error(value) => write!(f, "{}", value),
             Object::Nil => write!(f, "nil"),
+            Object::Empty => write!(f, ""),
         }
     }
 }

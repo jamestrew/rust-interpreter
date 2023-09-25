@@ -4,6 +4,7 @@ pub mod lexer;
 pub mod parser;
 
 use ast::Statement;
+pub use eval::*;
 use lexer::Lexer;
 use parser::*;
 

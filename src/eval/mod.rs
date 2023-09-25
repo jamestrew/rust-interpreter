@@ -9,29 +9,44 @@ use object::*;
 
 use self::environment::Env;
 use crate::ast::{self, *};
-use crate::eval::environment::{new_env, Environment};
-use crate::lexer::Token;
+pub use crate::eval::environment::new_env;
+use crate::eval::environment::Environment;
+use crate::lexer::{Lexer, Token};
+use crate::parser::*;
 
 type ObjResult = anyhow::Result<Rc<Object>>;
 
-pub fn eval_program(program: &Program, env: &Env) -> ObjResult {
-    let mut ret = NIL.into();
+pub fn eval(input: &str, env: &Env) -> Option<String> {
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    let program = match parser.parse_programe() {
+        Ok(prog) => prog,
+        Err(err) => return Some(format!("Syntax error: {}", err)),
+    };
+
+    match eval_program(&program, env).as_ref() {
+        Object::Empty => None,
+        obj => Some(obj.to_string()),
+    }
+}
+
+fn eval_program(program: &Program, env: &Env) -> Rc<Object> {
+    let mut ret = Rc::new(EMPTY);
     for stmt in &program.statements {
         let stmt: anyhow::Result<Rc<Object>> = eval_statement(stmt, env);
         match stmt {
             Ok(stmt) => {
                 let obj = stmt.as_ref();
                 match obj {
-                    Object::Return(val) => return Ok(val.clone()),
-                    Object::Error(_) => return Ok(stmt),
-                    _ => (),
+                    Object::Return(val) => return val.clone(),
+                    Object::Error(_) => return stmt,
+                    _ => ret = stmt,
                 }
-                ret = stmt;
             }
-            Err(err) => return Ok(Object::new_eror(err).into()),
+            Err(err) => return Object::new_eror(err).into(),
         }
     }
-    Ok(ret)
+    ret
 }
 
 fn eval_statement(stmt: &Statement, env: &Env) -> ObjResult {
@@ -46,7 +61,7 @@ fn eval_statement(stmt: &Statement, env: &Env) -> ObjResult {
 fn eval_let(stmt: &Let, env: &Env) -> ObjResult {
     let value = eval_expression(stmt.value(), env)?;
     env.borrow_mut().set(stmt.name(), Rc::clone(&value));
-    Ok(value)
+    Ok(EMPTY.into())
 }
 
 fn eval_block(stmt: &Block, env: &Env) -> ObjResult {
