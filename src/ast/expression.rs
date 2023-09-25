@@ -73,9 +73,7 @@ impl<'a> TryFrom<&'a Token> for Identifier {
                 value: ident.clone(),
             })
         } else {
-            Err(anyhow::anyhow!(
-                "Identifier can only be created from an Identifier token"
-            ))
+            Err(anyhow::anyhow!("Invalid identifier: {}", token))
         }
     }
 }

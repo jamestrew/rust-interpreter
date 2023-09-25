@@ -160,7 +160,7 @@ impl Parser {
             T::If => Expr::If(self.parse_if()?),
             T::LParen => self.parse_grouped()?,
             T::Function => Expr::Function(self.parse_function()?),
-            _ => unreachable!("parse_expression for {:?}", token),
+            token => return Err(anyhow::anyhow!("Unexpected token: {}", token)),
         };
 
         while precedence < self.peek_precedence()? {
@@ -176,7 +176,7 @@ impl Parser {
                 | T::GT
                 | T::Eof => Expr::Infix(self.parse_infix(expr)?),
                 T::LParen => Expr::Call(self.parse_call(expr)?),
-                token => unreachable!("invalid token {:?}", token),
+                token => return Err(anyhow::anyhow!("Unexpected token: {}", token)),
             };
         }
 
