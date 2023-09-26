@@ -10,6 +10,7 @@ pub enum Precedence {
     Product,
     Prefix,
     Call,
+    Index,
 }
 
 impl From<&Token> for Precedence {
@@ -20,6 +21,7 @@ impl From<&Token> for Precedence {
             Token::Plus | Token::Minus => Self::Sum,
             Token::Asterisk | Token::ForwardSlash => Self::Product,
             Token::LParen => Self::Call,
+            Token::LBracket => Self::Index,
             _ => Self::Lowest,
         }
     }
@@ -37,5 +39,6 @@ mod test {
         assert!(Precedence::Sum < Precedence::Product);
         assert!(Precedence::Product < Precedence::Prefix);
         assert!(Precedence::Prefix < Precedence::Call);
+        assert!(Precedence::Call < Precedence::Index);
     }
 }

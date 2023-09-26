@@ -1,0 +1,6 @@
+---
+source: src/parser/test.rs
+description: "foo[1+2]"
+expression: first
+---
+(foo[(1 + 2)]);

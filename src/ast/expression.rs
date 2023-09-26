@@ -15,6 +15,7 @@ pub enum Expression {
     Function(Function),
     Call(Call),
     Array(Vec<Expression>),
+    Index(Index),
 }
 
 impl Node for Expression {}
@@ -31,6 +32,7 @@ impl Debug for Expression {
             Expression::Function(val) => write!(f, "{:?}", val),
             Expression::Call(val) => write!(f, "{:?}", val),
             Expression::Array(val) => write!(f, "Array{:?}", val),
+            Expression::Index(val) => write!(f, "{:?}", val),
         }
     }
 }
@@ -53,6 +55,7 @@ impl Display for Expression {
                     .collect::<Vec<String>>()
                     .join(",")
             ),
+            Expression::Index(val) => val.to_string(),
         };
         write!(f, "{}", s)
     }
@@ -394,5 +397,28 @@ impl Display for Call {
             write!(f, "{}", arg)?;
         }
         write!(f, ")")
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Index {
+    left: Box<Expression>,
+    index: Box<Expression>,
+}
+
+impl Index {
+    pub fn new(left: Expression, index: Expression) -> Self {
+        Self {
+            left: Box::new(left),
+            index: Box::new(index),
+        }
+    }
+}
+
+impl Node for Index {}
+
+impl Display for Index {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}[{}])", self.left, self.index)
     }
 }

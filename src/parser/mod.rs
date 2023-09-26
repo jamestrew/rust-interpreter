@@ -177,6 +177,7 @@ impl Parser {
                 | T::GT
                 | T::Eof => Expr::Infix(self.parse_infix(expr)?),
                 T::LParen => Expr::Call(self.parse_call(expr)?),
+                T::LBracket => Expr::Index(self.parse_index(expr)?),
                 token => return Err(anyhow::anyhow!("Unexpected token: {}", token)),
             };
         }
@@ -280,5 +281,14 @@ impl Parser {
         }
 
         Ok(Call::new(func, args))
+    }
+
+    fn parse_index(&mut self, left: Expression) -> anyhow::Result<Index> {
+        self.expect_peek(Token::LBracket)?;
+        self.next_token();
+
+        let index = self.parse_expression(Precedence::Lowest)?;
+        self.expect_peek(Token::RBracket)?;
+        Ok(Index::new(left, index))
     }
 }
