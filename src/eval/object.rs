@@ -13,7 +13,7 @@ pub enum Object {
     Function(Function),
     Error(String),
     Builtin(Builtin),
-    Array(Vec<Object>),
+    Array(Vec<Rc<Object>>),
     Nil,
     Empty,
 }

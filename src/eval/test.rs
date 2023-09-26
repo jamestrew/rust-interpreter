@@ -180,3 +180,11 @@ assert_program!(
     "let add = fn(x, y) { len(x + y) }; add(\"foo\", \"bar\")",
     "6"
 );
+
+assert_program!(array_1, "[1,2,3]", "[1,2,3]");
+assert_program!(array_2, "[1,\"foo\",3]", "[1,\"foo\",3]");
+assert_program!(
+    array_3,
+    "[1,\"foo\",len]",
+    "[1,\"foo\",<built-in function len>]"
+);

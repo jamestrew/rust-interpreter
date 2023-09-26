@@ -91,7 +91,7 @@ fn eval_expression(expr: &Expression, env: &Env) -> ObjResult {
         Expression::If(val) => eval_if(val, env),
         Expression::Function(val) => eval_function(val, env),
         Expression::Call(val) => eval_fn_call(val, env),
-        Expression::Array(val) => todo!(),
+        Expression::Array(val) => eval_array(val, env),
     }
 }
 
@@ -207,6 +207,14 @@ fn eval_if(expr: &If, env: &Env) -> ObjResult {
 
 fn eval_function(expr: &ast::Function, env: &Env) -> ObjResult {
     Ok(Object::Function(object::Function::new(expr, env)).into())
+}
+
+fn eval_array(array: &[Expression], env: &Env) -> ObjResult {
+    let mut elems = Vec::new();
+    for elem in array {
+        elems.push(eval_expression(elem, env)?);
+    }
+    Ok(Object::Array(elems).into())
 }
 
 fn eval_fn_call(expr: &Call, env: &Env) -> ObjResult {
