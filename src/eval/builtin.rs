@@ -64,3 +64,13 @@ impl Builtin {
         }
     }
 }
+
+impl std::fmt::Display for Builtin {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fn_name = match self {
+            Builtin::Len => "len",
+            Builtin::Puts => "puts",
+        };
+        write!(f, "<built-in function {}>", fn_name)
+    }
+}

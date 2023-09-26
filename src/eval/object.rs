@@ -68,7 +68,7 @@ impl std::fmt::Display for Object {
             Object::String(value) => write!(f, "{}", value),
             Object::Return(value) => write!(f, "{}", value),
             Object::Function(value) => write!(f, "{}", value),
-            Object::Builtin(_) => todo!(),
+            Object::Builtin(value) => write!(f, "{}", value),
             Object::Error(value) => write!(f, "{}", value),
             Object::Nil => write!(f, "nil"),
             Object::Empty => write!(f, ""),
