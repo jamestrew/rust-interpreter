@@ -67,7 +67,7 @@ impl std::fmt::Display for Object {
         match self {
             Object::Int(value) => write!(f, "{}", value),
             Object::Bool(value) => write!(f, "{}", value),
-            Object::String(value) => write!(f, "{}", value),
+            Object::String(value) => write!(f, "\"{}\"", value),
             Object::Return(value) => write!(f, "{}", value),
             Object::Function(value) => write!(f, "{}", value),
             Object::Builtin(value) => write!(f, "{}", value),

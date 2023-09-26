@@ -28,7 +28,7 @@ assert_program!(integer_2, "5;", "5");
 assert_program!(boolean_1, "true", "true");
 assert_program!(boolean_2, "true;", "true");
 
-assert_program!(string_literal, "\"hello\"", "hello");
+assert_program!(string_literal, "\"hello\"", "\"hello\"");
 
 assert_program!(prefix_bang_integer_1, "!1", "false");
 assert_program!(prefix_bang_integer_2, "!69420", "false");
@@ -77,7 +77,7 @@ assert_program!(infix_bool_7, "(1 < 2) == false", "false");
 assert_program!(infix_bool_8, "(1 > 2) == true", "false");
 assert_program!(infix_bool_9, "(1 > 2) == false", "true");
 
-assert_program!(infix_string, "\"foo\" + \"bar\"", "foobar");
+assert_program!(infix_string, "\"foo\" + \"bar\"", "\"foobar\"");
 
 assert_program!(if_expression_1, "if (true) { 10 }", "10");
 assert_program!(if_expression_2, "if (false) { 10 }", "nil");
