@@ -1,3 +1,4 @@
+mod builtin;
 mod environment;
 mod object;
 #[cfg(test)]
@@ -33,7 +34,7 @@ pub fn eval(input: &str, env: &Env) -> Option<String> {
 fn eval_program(program: &Program, env: &Env) -> Rc<Object> {
     let mut ret = Rc::new(EMPTY);
     for stmt in &program.statements {
-        let stmt: anyhow::Result<Rc<Object>> = eval_statement(stmt, env);
+        let stmt = eval_statement(stmt, env);
         match stmt {
             Ok(stmt) => {
                 let obj = stmt.as_ref();
@@ -208,7 +209,7 @@ fn eval_function(expr: &ast::Function, env: &Env) -> ObjResult {
 }
 
 fn eval_fn_call(expr: &Call, env: &Env) -> ObjResult {
-    let func: Rc<Object> = eval_expression(expr.function(), env)?;
+    let func = eval_expression(expr.function(), env)?;
 
     let mut arg_objs = Vec::new();
     for arg in expr.args() {
@@ -229,5 +230,24 @@ fn eval_fn_call(expr: &Call, env: &Env) -> ObjResult {
         return eval_block(func.body(), &new_env(Some(env)));
     }
 
-    unreachable!("not a function")
+    match func.as_ref() {
+        Object::Function(func) => {
+            let mut env = Environment::new_enclosed(&Rc::clone(func.env()));
+
+            let params = func.params();
+            if params.len() != arg_objs.len() {
+                return Err(anyhow::anyhow!("mismatched arg and param count"));
+            }
+
+            for (param, arg) in params.iter().zip(arg_objs) {
+                env.set(param, Rc::clone(&arg))
+            }
+            eval_block(func.body(), &new_env(Some(env)))
+        }
+        Object::Builtin(builtin) => builtin.execute(&arg_objs),
+        _ => Err(anyhow::anyhow!(
+            "'{}' is not a callable object",
+            func.type_str()
+        )),
+    }
 }

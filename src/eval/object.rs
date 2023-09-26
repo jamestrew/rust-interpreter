@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use super::builtin::Builtin;
 use super::environment::Env;
 use crate::ast;
 
@@ -11,6 +12,7 @@ pub enum Object {
     Return(Rc<Object>),
     Function(Function),
     Error(String),
+    Builtin(Builtin),
     Nil,
     Empty,
 }
@@ -50,6 +52,7 @@ impl Object {
             Object::String(_) => "STRING",
             Object::Return(_) => "RETURN",
             Object::Function(_) => "FUNCTION",
+            Object::Builtin(_) => "BUILTIN",
             Object::Error(_) => "ERROR",
             Object::Nil => "NIL",
             Object::Empty => "EMPTY",
@@ -65,6 +68,7 @@ impl std::fmt::Display for Object {
             Object::String(value) => write!(f, "{}", value),
             Object::Return(value) => write!(f, "{}", value),
             Object::Function(value) => write!(f, "{}", value),
+            Object::Builtin(_) => todo!(),
             Object::Error(value) => write!(f, "{}", value),
             Object::Nil => write!(f, "nil"),
             Object::Empty => write!(f, ""),

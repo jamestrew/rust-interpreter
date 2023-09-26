@@ -54,6 +54,12 @@ pub struct Identifier {
     value: Rc<str>,
 }
 
+impl Identifier {
+    pub fn new(val: &str) -> Self {
+        Self { value: val.into() }
+    }
+}
+
 impl Node for Identifier {}
 
 impl From<&Rc<str>> for Identifier {

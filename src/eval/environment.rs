@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use super::builtin::Builtin;
 use super::object::Object;
 use crate::ast::Identifier;
 
@@ -15,10 +16,21 @@ pub fn new_env(outer: Option<Environment>) -> Env {
     Rc::new(RefCell::new(env))
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Environment {
     store: HashMap<Identifier, Rc<Object>>,
     outer: Option<Env>,
+}
+
+impl Default for Environment {
+    fn default() -> Self {
+        let mut env = Self {
+            store: Default::default(),
+            outer: Default::default(),
+        };
+        Builtin::register(&mut env);
+        env
+    }
 }
 
 impl Environment {

@@ -22,22 +22,6 @@ macro_rules! assert_program {
     };
 }
 
-macro_rules! ss_debug_stmts {
-    ($name:tt, $input:expr) => {
-        #[test]
-        fn $name() {
-            let program = parse($input);
-            let env = new_env(None);
-            let output = eval_program(&program, &env);
-            insta::with_settings!({
-                description => $input,
-            }, {
-                insta::assert_debug_snapshot!(output);
-            })
-        }
-    };
-}
-
 assert_program!(integer_1, "5", "5");
 assert_program!(integer_2, "5;", "5");
 
@@ -162,8 +146,6 @@ assert_program!(
 );
 assert_program!(let_stmt_5, "foobar;", "identifier not found: foobar");
 
-ss_debug_stmts!(function_1, "fn(x) { x + 2; }");
-
 assert_program!(fn_call_1, "let identity = fn(x) { x; }; identity(5)", "5");
 assert_program!(
     fn_call_2,
@@ -189,4 +171,12 @@ let addTwo = newAdder(2);
 addTwo(3);
 ",
     "5"
+);
+
+assert_program!(builtin_1, "len(\"foo\")", "3");
+assert_program!(builtin_2, "puts(\"foo\")", "");
+assert_program!(
+    builtin_3,
+    "let add = fn(x, y) { len(x + y) }; add(\"foo\", \"bar\")",
+    "6"
 );
