@@ -1,0 +1,10 @@
+---
+source: src/parser/test.rs
+description: "[1,\"foo\",3];"
+expression: stmts
+---
+[
+    ExpressionStatement(
+        Array[Int(1), StringLiteral("foo"), Int(3)],
+    ),
+]

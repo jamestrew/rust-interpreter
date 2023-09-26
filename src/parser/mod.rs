@@ -160,6 +160,7 @@ impl Parser {
             T::If => Expr::If(self.parse_if()?),
             T::LParen => self.parse_grouped()?,
             T::Function => Expr::Function(self.parse_function()?),
+            T::LBracket => Expr::Array(self.parse_array()?),
             token => return Err(anyhow::anyhow!("Unexpected token: {}", token)),
         };
 
@@ -248,6 +249,21 @@ impl Parser {
 
         let body = self.parse_block()?;
         Ok(Function::new(params, body))
+    }
+
+    fn parse_array(&mut self) -> anyhow::Result<Vec<Expression>> {
+        self.expect_current(Token::LBracket)?;
+
+        let mut elems = Vec::new();
+        while !self.current_token_is(Token::RBracket) {
+            elems.push(self.parse_expression(Precedence::Lowest)?);
+            self.next_token();
+            if self.current_token_is(Token::Comma) {
+                self.next_token();
+            }
+        }
+
+        Ok(elems)
     }
 
     fn parse_call(&mut self, func: Expression) -> anyhow::Result<Call> {

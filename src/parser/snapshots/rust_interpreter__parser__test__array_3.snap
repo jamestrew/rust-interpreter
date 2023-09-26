@@ -1,0 +1,10 @@
+---
+source: src/parser/test.rs
+description: "[1,\"foo\",fn(x) { x + 1 }];"
+expression: stmts
+---
+[
+    ExpressionStatement(
+        Array[Int(1), StringLiteral("foo"), Function { params: [Identifier("x")], body: Block { statements: [ExpressionStatement(Infix { token: "+", left: Identifier("x"), right: Int(1) })] } }],
+    ),
+]

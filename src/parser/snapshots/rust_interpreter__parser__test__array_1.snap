@@ -1,0 +1,13 @@
+---
+source: src/parser/test.rs
+description: "[1,2,3]; 5"
+expression: stmts
+---
+[
+    ExpressionStatement(
+        Array[Int(1), Int(2), Int(3)],
+    ),
+    ExpressionStatement(
+        Int(5),
+    ),
+]

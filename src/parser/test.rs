@@ -130,3 +130,7 @@ ss_display_stmt!(fn_call_display_1, "add()");
 ss_display_stmt!(fn_call_display_2, "add(x)");
 ss_display_stmt!(fn_call_display_3, "add(x, y);");
 ss_display_stmt!(fn_call_display_4, "fn(x, y){ return x + y; }(1, 2);");
+
+ss_debug_stmts!(array_1, "[1,2,3]; 5");
+ss_debug_stmts!(array_2, "[1,\"foo\",3];");
+ss_debug_stmts!(array_3, "[1,\"foo\",fn(x) { x + 1 }];");

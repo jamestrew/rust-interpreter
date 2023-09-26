@@ -14,6 +14,7 @@ pub enum Expression {
     If(If),
     Function(Function),
     Call(Call),
+    Array(Vec<Expression>),
 }
 
 impl Node for Expression {}
@@ -29,6 +30,7 @@ impl Debug for Expression {
             Expression::If(val) => write!(f, "{:?}", val),
             Expression::Function(val) => write!(f, "{:?}", val),
             Expression::Call(val) => write!(f, "{:?}", val),
+            Expression::Array(val) => write!(f, "Array{:?}", val),
         }
     }
 }
@@ -44,6 +46,13 @@ impl Display for Expression {
             Expression::If(val) => val.to_string(),
             Expression::Function(val) => val.to_string(),
             Expression::Call(val) => val.to_string(),
+            Expression::Array(val) => format!(
+                "[{}]",
+                val.iter()
+                    .map(|expr| expr.to_string())
+                    .collect::<Vec<String>>()
+                    .join(",")
+            ),
         };
         write!(f, "{}", s)
     }

@@ -13,6 +13,7 @@ pub enum Object {
     Function(Function),
     Error(String),
     Builtin(Builtin),
+    Array(Vec<Object>),
     Nil,
     Empty,
 }
@@ -53,6 +54,7 @@ impl Object {
             Object::Return(_) => "RETURN",
             Object::Function(_) => "FUNCTION",
             Object::Builtin(_) => "BUILTIN",
+            Object::Array(_) => "ARRAY",
             Object::Error(_) => "ERROR",
             Object::Nil => "NIL",
             Object::Empty => "EMPTY",
@@ -69,6 +71,14 @@ impl std::fmt::Display for Object {
             Object::Return(value) => write!(f, "{}", value),
             Object::Function(value) => write!(f, "{}", value),
             Object::Builtin(value) => write!(f, "{}", value),
+            Object::Array(val) => write!(
+                f,
+                "[{}]",
+                val.iter()
+                    .map(|expr| expr.to_string())
+                    .collect::<Vec<String>>()
+                    .join(",")
+            ),
             Object::Error(value) => write!(f, "{}", value),
             Object::Nil => write!(f, "nil"),
             Object::Empty => write!(f, ""),
