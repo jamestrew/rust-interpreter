@@ -90,9 +90,9 @@ fn eval_expression(expr: &Expression, env: &Env) -> ObjResult {
         Expression::Infix(val) => eval_infix(val, env),
         Expression::If(val) => eval_if(val, env),
         Expression::Function(val) => eval_function(val, env),
-        Expression::Call(val) => eval_fn_call(val, env),
         Expression::Array(val) => eval_array(val, env),
-        Expression::Index(_val) => todo!("eval index"),
+        Expression::Call(val) => eval_fn_call(val, env),
+        Expression::Index(val) => eval_index(val, env),
     }
 }
 
@@ -259,5 +259,42 @@ fn eval_fn_call(expr: &Call, env: &Env) -> ObjResult {
             "'{}' is not a callable object",
             func.type_str()
         )),
+    }
+}
+
+fn eval_index(expr: &Index, env: &Env) -> ObjResult {
+    let left_obj = eval_expression(expr.left(), env)?;
+    let index = eval_expression(expr.index(), env)?;
+
+    match left_obj.as_ref() {
+        Object::Array(arr) => {
+            let index = integer_index(&index, "array", arr.len())?;
+            Ok(Rc::clone(&arr[index]))
+        }
+        Object::String(s) => {
+            let index = integer_index(&index, "string", s.len())?;
+            Ok(Object::String(s[index..index + 1].to_string()).into())
+        }
+        obj => Err(anyhow::anyhow!(
+            "'{}' object is not subscriptable",
+            obj.type_str()
+        )),
+    }
+}
+
+fn integer_index(index: &Rc<Object>, index_item: &str, index_len: usize) -> anyhow::Result<usize> {
+    if let Object::Int(index) = index.as_ref() {
+        let index = *index as usize;
+        if index_len <= index {
+            Err(anyhow::anyhow!("{} index out of range", index_item))
+        } else {
+            Ok(index)
+        }
+    } else {
+        Err(anyhow::anyhow!(
+            "{} indices must be integers, not '{}'",
+            index_item,
+            index.type_str()
+        ))
     }
 }

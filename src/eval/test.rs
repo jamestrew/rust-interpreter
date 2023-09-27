@@ -188,3 +188,27 @@ assert_program!(
     "[1,\"foo\",len]",
     "[1,\"foo\",<built-in function len>]"
 );
+
+assert_program!(array_index_1, "[1,2,3][0]", "1");
+assert_program!(array_index_2, "[1,\"foo\",3][1]", "\"foo\"");
+assert_program!(array_index_3, "[1,\"foo\",len][2](\"YOOOOOO\")", "7");
+assert_program!(
+    array_bad_index_1,
+    "[1,2,3][\"foo\"]",
+    "array indices must be integers, not 'STRING'"
+);
+
+assert_program!(array_bad_index_2, "[1,2,3][3]", "array index out of range");
+
+assert_program!(string_index_1, "\"foo\"[0]", "\"f\"");
+assert_program!(
+    string_bad_index_1,
+    "\"foo\"[\"foo\"]",
+    "string indices must be integers, not 'STRING'"
+);
+
+assert_program!(
+    string_bad_index_2,
+    "\"foo\"[3]",
+    "string index out of range"
+);

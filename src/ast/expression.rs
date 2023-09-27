@@ -413,6 +413,14 @@ impl Index {
             index: Box::new(index),
         }
     }
+
+    pub fn left(&self) -> &Expression {
+        &self.left
+    }
+
+    pub fn index(&self) -> &Expression {
+        &self.index
+    }
 }
 
 impl Node for Index {}
