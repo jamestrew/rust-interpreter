@@ -194,9 +194,9 @@ mod test {
     snapshot!(assignments2, "let ten = 10;");
     snapshot!(
         assignments3,
-        r#"let add = fn(x, y) {
+        r"let add = fn(x, y) {
     x + y;
-};"#
+};"
     );
     snapshot!(assignments4, "let result = add(five, ten);");
 
@@ -206,11 +206,11 @@ mod test {
     snapshot!(equality3, "10 != 9;");
     snapshot!(
         conditional,
-        r#"if (5 < 10) {
+        r"if (5 < 10) {
     return true;
 } else {
     return false;
-}"#
+}"
     );
 
     snapshot!(string_literal, r#""hello world";"#);

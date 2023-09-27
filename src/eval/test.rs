@@ -94,26 +94,26 @@ assert_program!(return_statement_4, "9; return 2 * 5; 9;", "10");
 assert_program!(return_statement_5, "if (true) { return 10; }", "10");
 assert_program!(
     return_statement_6,
-    r#"
+    r"
     if (true) {
         if (false) {
             return 10;
         }
         return 1;
     }
-    "#,
+    ",
     "1"
 );
 assert_program!(
     return_statement_7,
-    r#"
+    r"
     if (true) {
         if (true) {
             return 10;
         }
         return 1;
     }
-    "#,
+    ",
     "10"
 );
 
