@@ -101,21 +101,18 @@ ss_display_stmt!(operator_precedence_17, "(5 + 5) * 2");
 ss_display_stmt!(operator_precedence_18, "2 / (5 + 5)");
 ss_display_stmt!(operator_precedence_19, "-(5 + 5)");
 ss_display_stmt!(operator_precedence_20, "!(true == true)");
-// ss_display_stmt!(operator_precedence_21, "a + add(b * c) + d");
-// ss_display_stmt!(
-//     operator_precedence_22,
-//     "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))"
-// );
-// ss_display_stmt!(operator_precedence_23, "add(a + b + c * d / f + g)");
-// ss_display_stmt!(operator_precedence_24, "a * [1, 2, 3, 4][b * c] * d");
-// ss_display_stmt!(operator_precedence_25, "add(a * b[2], b[1], 2 * [1, 2][1])");
+ss_display_stmt!(operator_precedence_21, "a + add(b * c) + d");
+ss_display_stmt!(
+    operator_precedence_22,
+    "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))"
+);
+ss_display_stmt!(operator_precedence_23, "add(a + b + c * d / f + g)");
+ss_display_stmt!(operator_precedence_24, "a * [1, 2, 3, 4][b * c] * d");
+ss_display_stmt!(operator_precedence_25, "add(a * b[2], b[1], 2 * [1, 2][1])");
 
 ss_display_stmt!(if_expr_1, "if (x < y) { x }");
 ss_display_stmt!(if_expr_2, "if (x < y) { x } else { y }");
 ss_display_stmt!(if_expr_3, "if (x < y) { x } else { let z = x + y; z }");
-
-ss_debug_stmts!(block_1, "{ return 5; }");
-ss_debug_stmts!(block_2, "{ return 5; return true; }");
 
 ss_debug_stmts!(fn_expr_1, "fn() {}");
 ss_debug_stmts!(fn_expr_2, "fn(x) {}");
@@ -139,3 +136,8 @@ ss_display_stmt!(array_index_1, "foo[1]");
 ss_display_stmt!(array_index_2, "foo[add(3)]");
 ss_display_stmt!(array_index_3, "foo[1+2]");
 ss_display_stmt!(array_index_4, "[1,2,3,4][1+2]");
+
+ss_display_stmt!(hash_1, "{}");
+ss_display_stmt!(hash_2, r#"{"foo": "bar"}"#);
+ss_display_stmt!(hash_3, r#"{"foo": "bar", "eggs": "spam"}"#);
+ss_display_stmt!(hash_4, r#"{true: "bar", 2: "baz"}"#);

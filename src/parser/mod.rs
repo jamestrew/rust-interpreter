@@ -100,6 +100,12 @@ impl Parser {
         }
     }
 
+    pub fn eat_comma(&mut self) {
+        if self.current_token_is(Token::Comma) {
+            self.next_token();
+        }
+    }
+
     pub fn current_precedence(&self) -> anyhow::Result<Precedence> {
         Ok(self.current_token()?.into())
     }
@@ -112,7 +118,6 @@ impl Parser {
         match self.current_token()? {
             Token::Let => self.parse_let(),
             Token::Return => self.parse_return(),
-            Token::LBrace => Ok(Statement::Block(self.parse_block()?)),
             _ => Ok(Statement::ExpressionStatement(
                 self.parse_expression(Precedence::Lowest)?,
             )),
@@ -161,6 +166,7 @@ impl Parser {
             T::LParen => self.parse_grouped()?,
             T::Function => Expr::Function(self.parse_function()?),
             T::LBracket => Expr::Array(self.parse_array()?),
+            T::LBrace => Expr::Hash(self.parse_hash()?),
             token => return Err(anyhow::anyhow!("Unexpected token: {}", token)),
         };
 
@@ -242,9 +248,7 @@ impl Parser {
         while !self.current_token_is(Token::RParen) {
             params.push(self.parse_identifer()?);
             self.next_token();
-            if self.current_token_is(Token::Comma) {
-                self.next_token();
-            }
+            self.eat_comma();
         }
         self.expect_current(Token::RParen)?;
 
@@ -259,12 +263,27 @@ impl Parser {
         while !self.current_token_is(Token::RBracket) {
             elems.push(self.parse_expression(Precedence::Lowest)?);
             self.next_token();
-            if self.current_token_is(Token::Comma) {
-                self.next_token();
-            }
+            self.eat_comma();
         }
 
         Ok(elems)
+    }
+
+    fn parse_hash(&mut self) -> anyhow::Result<Hash> {
+        self.expect_current(Token::LBrace)?;
+
+        let mut keys = Vec::new();
+        let mut values = Vec::new();
+        while !self.current_token_is(Token::RBrace) {
+            keys.push(self.parse_expression(Precedence::Lowest)?);
+            self.expect_peek(Token::Colon)?;
+            self.next_token();
+            values.push(self.parse_expression(Precedence::Lowest)?);
+            self.next_token();
+            self.eat_comma();
+        }
+
+        Ok(Hash::new(keys, values))
     }
 
     fn parse_call(&mut self, func: Expression) -> anyhow::Result<Call> {
@@ -275,9 +294,7 @@ impl Parser {
         while !self.current_token_is(Token::RParen) {
             args.push(self.parse_expression(Precedence::Lowest)?);
             self.next_token();
-            if self.current_token_is(Token::Comma) {
-                self.next_token()
-            }
+            self.eat_comma();
         }
 
         Ok(Call::new(func, args))

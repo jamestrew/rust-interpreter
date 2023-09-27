@@ -1,8 +1,0 @@
----
-source: src/parser/test.rs
-description: "{ return 5; }"
-expression: stmts
----
-[
-    Block { statements: [Return { value: Int(5) }] },
-]

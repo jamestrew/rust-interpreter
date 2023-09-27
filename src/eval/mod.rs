@@ -91,6 +91,7 @@ fn eval_expression(expr: &Expression, env: &Env) -> ObjResult {
         Expression::If(val) => eval_if(val, env),
         Expression::Function(val) => eval_function(val, env),
         Expression::Array(val) => eval_array(val, env),
+        Expression::Hash(_val) => todo!(),
         Expression::Call(val) => eval_fn_call(val, env),
         Expression::Index(val) => eval_index(val, env),
     }

@@ -15,6 +15,7 @@ pub enum Expression {
     Function(Function),
     Call(Call),
     Array(Vec<Expression>),
+    Hash(Hash),
     Index(Index),
 }
 
@@ -32,6 +33,7 @@ impl Debug for Expression {
             Expression::Function(val) => write!(f, "{:?}", val),
             Expression::Call(val) => write!(f, "{:?}", val),
             Expression::Array(val) => write!(f, "Array{:?}", val),
+            Expression::Hash(val) => write!(f, "{:?}", val),
             Expression::Index(val) => write!(f, "{:?}", val),
         }
     }
@@ -55,6 +57,7 @@ impl Display for Expression {
                     .collect::<Vec<String>>()
                     .join(",")
             ),
+            Expression::Hash(val) => val.to_string(),
             Expression::Index(val) => val.to_string(),
         };
         write!(f, "{}", s)
@@ -397,6 +400,33 @@ impl Display for Call {
             write!(f, "{}", arg)?;
         }
         write!(f, ")")
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Hash {
+    keys: Vec<Expression>,
+    values: Vec<Expression>,
+}
+
+impl Hash {
+    pub fn new(keys: Vec<Expression>, values: Vec<Expression>) -> Self {
+        Self { keys, values }
+    }
+}
+
+impl Node for Hash {}
+
+impl Display for Hash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{")?;
+        for (idx, (key, value)) in self.keys.iter().zip(self.values.iter()).enumerate() {
+            if idx != 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}: {}", key, value)?;
+        }
+        write!(f, "}}")
     }
 }
 

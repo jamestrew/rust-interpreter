@@ -117,8 +117,6 @@ assert_program!(
     "10"
 );
 
-assert_program!(block_statement_1, "{ 1; }", "1");
-
 assert_program!(
     error_handling_1,
     "5 + true;",
