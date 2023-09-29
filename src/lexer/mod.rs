@@ -105,6 +105,7 @@ impl Lexer {
             "true" => Token::True,
             "false" => Token::False,
             "return" => Token::Return,
+            "nil" => Token::Nil,
             _ => Token::Identifier(ident.into()),
         })
     }

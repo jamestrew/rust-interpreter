@@ -123,6 +123,7 @@ impl Display for Identifier {
 pub enum Primative {
     Int(i64),
     Bool(bool),
+    Nil,
 }
 
 impl Node for Primative {}
@@ -135,6 +136,7 @@ impl TryFrom<&Token> for Primative {
             Token::Int(val) => Ok(Self::Int(val.parse::<i64>()?)),
             Token::True => Ok(Self::Bool(true)),
             Token::False => Ok(Self::Bool(false)),
+            Token::Nil => Ok(Self::Nil),
             _ => unreachable!("Primative parse unexpected {:?}", token),
         }
     }
@@ -145,6 +147,7 @@ impl Debug for Primative {
         match self {
             Self::Int(val) => write!(f, "Int({val})"),
             Self::Bool(val) => write!(f, "Bool({val})"),
+            Self::Nil => write!(f, "Nil"),
         }
     }
 }
@@ -154,6 +157,7 @@ impl Display for Primative {
         match self {
             Primative::Int(val) => write!(f, "{}", val),
             Primative::Bool(val) => write!(f, "{}", val),
+            Primative::Nil => write!(f, "nil"),
         }
     }
 }

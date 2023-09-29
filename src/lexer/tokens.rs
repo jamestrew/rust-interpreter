@@ -37,6 +37,7 @@ pub enum Token {
     True,
     False,
     Return,
+    Nil,
 
     Eof,
 }
@@ -79,6 +80,7 @@ impl std::fmt::Display for Token {
             Token::True => write!(f, "true"),
             Token::False => write!(f, "false"),
             Token::Return => write!(f, "return"),
+            Token::Nil => write!(f, "nil"),
             Token::Eof => write!(f, "EOF"),
         }
     }

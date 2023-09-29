@@ -108,6 +108,7 @@ fn eval_primative(expr: &Primative) -> Rc<Object> {
     match expr {
         Primative::Int(val) => Object::Int(*val),
         Primative::Bool(val) => Object::new_bool(*val),
+        Primative::Nil => NIL,
     }
     .into()
 }

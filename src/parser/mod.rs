@@ -158,7 +158,7 @@ impl Parser {
 
         let token = self.current_token()?;
         let mut expr = match token {
-            T::Int(_) | T::True | T::False => Expr::Primative(Primative::try_from(token)?),
+            T::Int(_) | T::True | T::False | T::Nil => Expr::Primative(Primative::try_from(token)?),
             T::Str(s) => Expr::StringLiteral(s.clone()),
             T::Identifier(val) => Expr::Identifier(Identifier::from(val)),
             T::Minus | T::Bang => Expr::Prefix(self.parse_prefix()?),
