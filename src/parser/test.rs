@@ -141,3 +141,7 @@ ss_display_stmt!(hash_1, "{}");
 ss_display_stmt!(hash_2, r#"{"foo": "bar"}"#);
 ss_display_stmt!(hash_3, r#"{"foo": "bar", "eggs": "spam"}"#);
 ss_display_stmt!(hash_4, r#"{true: "bar", 2: "baz"}"#);
+
+ss_display_stmt!(hash_index_1, r#"{"foo": "bar"}["foo"]"#);
+ss_display_stmt!(hash_index_2, r#"{true: "bar", 2: "baz"}[true]"#);
+ss_display_stmt!(hash_index_3, r#"{true: "bar", 2: "baz"}[1+1]"#);
