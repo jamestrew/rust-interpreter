@@ -1,5 +1,7 @@
 use std::rc::Rc;
 
+use indexmap::IndexMap;
+
 use super::builtin::Builtin;
 use super::environment::Env;
 use crate::ast;
@@ -14,6 +16,7 @@ pub enum Object {
     Error(String),
     Builtin(Builtin),
     Array(Vec<Rc<Object>>),
+    Hash(Hash),
     Nil,
     Empty,
 }
@@ -55,6 +58,7 @@ impl Object {
             Object::Function(_) => "FUNCTION",
             Object::Builtin(_) => "BUILTIN",
             Object::Array(_) => "ARRAY",
+            Object::Hash(_) => "HASH",
             Object::Error(_) => "ERROR",
             Object::Nil => "NIL",
             Object::Empty => "EMPTY",
@@ -79,6 +83,7 @@ impl std::fmt::Display for Object {
                     .collect::<Vec<String>>()
                     .join(",")
             ),
+            Object::Hash(value) => write!(f, "{}", value),
             Object::Error(value) => write!(f, "{}", value),
             Object::Nil => write!(f, "nil"),
             Object::Empty => write!(f, ""),
@@ -125,5 +130,62 @@ impl std::fmt::Display for Function {
             write!(f, "{}", param)?;
         }
         write!(f, ") \n{}\n", self.body)
+    }
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum HashKey {
+    Int(i64),
+    Bool(bool),
+    String(String),
+}
+
+impl TryFrom<Rc<Object>> for HashKey {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Rc<Object>) -> Result<Self, Self::Error> {
+        match value.as_ref() {
+            Object::Int(val) => Ok(HashKey::Int(*val)),
+            Object::Bool(val) => Ok(HashKey::Bool(*val)),
+            Object::String(val) => Ok(HashKey::String(val.to_string())),
+            obj => Err(anyhow::anyhow!("unhashable type: {}", obj.type_str())),
+        }
+    }
+}
+
+impl std::fmt::Display for HashKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HashKey::Int(val) => write!(f, "{}", val),
+            HashKey::Bool(val) => write!(f, "{}", val),
+            HashKey::String(val) => write!(f, "\"{}\"", val),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Hash(IndexMap<HashKey, Rc<Object>>);
+
+impl Hash {
+    pub fn try_new(keys: Vec<Rc<Object>>, values: Vec<Rc<Object>>) -> anyhow::Result<Self> {
+        let mut map = IndexMap::new();
+
+        for (key, value) in keys.into_iter().zip(values.iter()) {
+            map.insert(key.try_into()?, Rc::clone(value));
+        }
+
+        Ok(Self(map))
+    }
+}
+
+impl std::fmt::Display for Hash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{")?;
+        let kv_pairs = self
+            .0
+            .iter()
+            .map(|(k, v)| format!("{}: {}", k, v))
+            .collect::<Vec<String>>();
+        write!(f, "{}}}", kv_pairs.join(", "))
     }
 }

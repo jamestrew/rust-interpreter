@@ -210,3 +210,21 @@ assert_program!(
     "\"foo\"[3]",
     "string index out of range"
 );
+
+assert_program!(hash_1, "{}", "{}");
+assert_program!(hash_2, r#"{"foo": "bar"}"#, r#"{"foo": "bar"}"#);
+assert_program!(
+    hash_3,
+    r#"{"foo": "bar", "eggs": "spam"}"#,
+    r#"{"foo": "bar", "eggs": "spam"}"#
+);
+assert_program!(
+    hash_4,
+    r#"{true: "bar", 2: "baz"}"#,
+    r#"{true: "bar", 2: "baz"}"#
+);
+assert_program!(
+    hash_unhashable,
+    r#"{[1,2,3]: "bad"}"#,
+    "unhashable type: ARRAY"
+);

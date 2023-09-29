@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.72"
+indexmap = "2.0.1"
 insta = "1.31.0"
 thiserror = "1.0.43"
 

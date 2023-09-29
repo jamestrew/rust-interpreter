@@ -413,6 +413,10 @@ impl Hash {
     pub fn new(keys: Vec<Expression>, values: Vec<Expression>) -> Self {
         Self { keys, values }
     }
+
+    pub fn items(&self) -> impl Iterator<Item = (&Expression, &Expression)> {
+        self.keys.iter().zip(self.values.iter())
+    }
 }
 
 impl Node for Hash {}

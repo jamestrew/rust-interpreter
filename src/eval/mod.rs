@@ -91,7 +91,7 @@ fn eval_expression(expr: &Expression, env: &Env) -> ObjResult {
         Expression::If(val) => eval_if(val, env),
         Expression::Function(val) => eval_function(val, env),
         Expression::Array(val) => eval_array(val, env),
-        Expression::Hash(_val) => todo!(),
+        Expression::Hash(val) => eval_hash(val, env),
         Expression::Call(val) => eval_fn_call(val, env),
         Expression::Index(val) => eval_index(val, env),
     }
@@ -217,6 +217,18 @@ fn eval_array(array: &[Expression], env: &Env) -> ObjResult {
         elems.push(eval_expression(elem, env)?);
     }
     Ok(Object::Array(elems).into())
+}
+
+fn eval_hash(hash: &ast::Hash, env: &Env) -> ObjResult {
+    let mut keys = Vec::new();
+    let mut values = Vec::new();
+
+    for (key, value) in hash.items() {
+        keys.push(eval_expression(key, env)?);
+        values.push(eval_expression(value, env)?);
+    }
+
+    Ok(Object::Hash(object::Hash::try_new(keys, values)?).into())
 }
 
 fn eval_fn_call(expr: &Call, env: &Env) -> ObjResult {
