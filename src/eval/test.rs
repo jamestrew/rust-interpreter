@@ -223,8 +223,20 @@ assert_program!(
     r#"{true: "bar", 2: "baz"}"#,
     r#"{true: "bar", 2: "baz"}"#
 );
+
+assert_program!(
+    hash_5,
+    r#"let two = 2; {"one": 10-9, two: "two", "thr" + "ee": 6/2}"#,
+    r#"{"one": 1, 2: "two", "three": 3}"#
+);
 assert_program!(
     hash_unhashable,
     r#"{[1,2,3]: "bad"}"#,
     "unhashable type: ARRAY"
 );
+
+assert_program!(hash_index_1, r#"{"foo": "bar"}["foo"]"#, "\"bar\"");
+assert_program!(hash_index_2, r#"{true: false, 2: "baz"}[true]"#, "false");
+assert_program!(hash_index_3, r#"{true: "bar", 2: 2}[1+1]"#, "2");
+assert_program!(hash_index_4, r#"let f = true; {true: "bar", 2: 2}[f]"#, "\"bar\"");
+assert_program!(hash_index_5, r#"{true: "bar", 2: 2}[3]"#, "nil");

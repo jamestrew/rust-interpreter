@@ -176,6 +176,10 @@ impl Hash {
 
         Ok(Self(map))
     }
+
+    pub fn get(&self, key: &HashKey) -> Option<Rc<Object>> {
+        self.0.get(key).cloned()
+    }
 }
 
 impl std::fmt::Display for Hash {

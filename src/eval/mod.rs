@@ -288,6 +288,10 @@ fn eval_index(expr: &Index, env: &Env) -> ObjResult {
             let index = integer_index(&index, "string", s.len())?;
             Ok(Object::String(s[index..index + 1].to_string()).into())
         }
+        Object::Hash(hash) => {
+            let index = HashKey::try_from(index)?;
+            Ok(hash.get(&index).unwrap_or(Rc::new(NIL)))
+        }
         obj => Err(anyhow::anyhow!(
             "'{}' object is not subscriptable",
             obj.type_str()
