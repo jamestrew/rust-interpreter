@@ -180,6 +180,10 @@ impl Hash {
     pub fn get(&self, key: &HashKey) -> Option<Rc<Object>> {
         self.0.get(key).cloned()
     }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 impl std::fmt::Display for Hash {

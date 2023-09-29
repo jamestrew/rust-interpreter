@@ -178,6 +178,8 @@ assert_program!(
     "let add = fn(x, y) { len(x + y) }; add(\"foo\", \"bar\")",
     "6"
 );
+assert_program!(builtin_4, "len([1,2,3,4])", "4");
+assert_program!(builtin_5, "len({true: 1, false: 0})", "2");
 
 assert_program!(array_1, "[1,2,3]", "[1,2,3]");
 assert_program!(array_2, "[1,\"foo\",3]", "[1,\"foo\",3]");

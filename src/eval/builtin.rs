@@ -9,6 +9,8 @@ fn len(args: &[Rc<Object>]) -> ObjResult {
     check_arg_length(args, 1, "len")?;
     match args[0].as_ref() {
         Object::String(val) => Ok(Rc::new(Object::Int(val.len() as i64))),
+        Object::Array(val) => Ok(Rc::new(Object::Int(val.len() as i64))),
+        Object::Hash(val) => Ok(Rc::new(Object::Int(val.len() as i64))),
         obj => Err(anyhow::anyhow!(
             "object of type {} has no len()",
             obj.type_str()
@@ -19,14 +21,15 @@ fn len(args: &[Rc<Object>]) -> ObjResult {
 fn puts(args: &[Rc<Object>]) -> ObjResult {
     for arg in args {
         match arg.as_ref() {
-            Object::Int(val) => print!("{}", val),
-            Object::Bool(val) => print!("{}", val),
-            Object::String(val) => print!("{}", val),
-            Object::Nil => print!("nil"),
-            obj => print!("{:?}", std::ptr::addr_of!(obj)),
+            Object::Int(_) => println!("{}", arg),
+            Object::Bool(_) => println!("{}", arg),
+            Object::String(_) => println!("{}", arg),
+            Object::Array(_) => println!("{}", arg),
+            Object::Hash(_) => println!("{}", arg),
+            Object::Nil => println!("nil"),
+            obj => println!("{:?} - {}", std::ptr::addr_of!(obj), obj.type_str()),
         };
     }
-    println!();
     Ok(Rc::new(EMPTY))
 }
 
