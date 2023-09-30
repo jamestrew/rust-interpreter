@@ -254,6 +254,7 @@ fn eval_fn_call(expr: &Call, env: &Env) -> ObjResult {
         return eval_block(func.body(), &new_env(Some(env)));
     }
 
+    println!("eval_fn_call");
     match func.as_ref() {
         Object::Function(func) => {
             let mut env = Environment::new_enclosed(&Rc::clone(func.env()));

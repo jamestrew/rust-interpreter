@@ -181,6 +181,27 @@ assert_program!(
 assert_program!(builtin_4, "len([1,2,3,4])", "4");
 assert_program!(builtin_5, "len({true: 1, false: 0})", "2");
 
+assert_program!(builtin_6, "first([1,2,3])", "1");
+assert_program!(builtin_7, "first([])", "nil");
+assert_program!(builtin_8, "first(1)", "'first' not callable on INTEGER");
+
+assert_program!(builtin_9, "last([1,2,3])", "3");
+assert_program!(builtin_10, "last([])", "nil");
+assert_program!(builtin_11, "last(1)", "'last' not callable on INTEGER");
+
+assert_program!(builtin_12, "rest([1,2,3])", "[2,3]");
+assert_program!(builtin_13, "rest([])", "nil");
+assert_program!(builtin_14, "rest(1)", "'rest' not callable on INTEGER");
+
+assert_program!(builtin_15, "push([1,2,3],4)", "[1,2,3,4]");
+assert_program!(builtin_16, "push([], 420)", "[420]");
+assert_program!(builtin_17, "push(1, 1)", "'push' not callable on INTEGER");
+assert_program!(
+    builtin_18,
+    "push(1)",
+    "push takes exactly 2 argument(s) (1 given)"
+);
+
 assert_program!(array_1, "[1,2,3]", "[1,2,3]");
 assert_program!(array_2, "[1,\"foo\",3]", "[1,\"foo\",3]");
 assert_program!(
@@ -240,5 +261,9 @@ assert_program!(
 assert_program!(hash_index_1, r#"{"foo": "bar"}["foo"]"#, "\"bar\"");
 assert_program!(hash_index_2, r#"{true: false, 2: "baz"}[true]"#, "false");
 assert_program!(hash_index_3, r#"{true: "bar", 2: 2}[1+1]"#, "2");
-assert_program!(hash_index_4, r#"let f = true; {true: "bar", 2: 2}[f]"#, "\"bar\"");
+assert_program!(
+    hash_index_4,
+    r#"let f = true; {true: "bar", 2: 2}[f]"#,
+    "\"bar\""
+);
 assert_program!(hash_index_5, r#"{true: "bar", 2: 2}[3]"#, "nil");
