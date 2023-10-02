@@ -12,7 +12,7 @@ use self::environment::Env;
 use crate::ast::{self, *};
 pub use crate::eval::environment::new_env;
 use crate::eval::environment::Environment;
-use crate::lexer::{Lexer, Token};
+use crate::lexer::{Lexer, TokenKind};
 use crate::parser::*;
 
 type ObjResult = anyhow::Result<Rc<Object>>;
@@ -61,7 +61,7 @@ fn eval_statement(stmt: &Statement, env: &Env) -> ObjResult {
 
 fn eval_let(stmt: &Let, env: &Env) -> ObjResult {
     let value = eval_expression(stmt.value(), env)?;
-    env.borrow_mut().set(stmt.name(), Rc::clone(&value));
+    env.borrow_mut().set(stmt.name().value(), Rc::clone(&value));
     Ok(EMPTY.into())
 }
 
@@ -98,7 +98,7 @@ fn eval_expression(expr: &Expression, env: &Env) -> ObjResult {
 }
 
 fn eval_identifier(expr: &Identifier, env: &Env) -> ObjResult {
-    match env.borrow().get(expr) {
+    match env.borrow().get(expr.value()) {
         Some(obj) => Ok(Rc::clone(&obj)),
         None => Err(anyhow::anyhow!("identifier not found: {}", expr)),
     }
@@ -106,17 +106,17 @@ fn eval_identifier(expr: &Identifier, env: &Env) -> ObjResult {
 
 fn eval_primative(expr: &Primative) -> Rc<Object> {
     match expr {
-        Primative::Int(val) => Object::Int(*val),
-        Primative::Bool(val) => Object::new_bool(*val),
-        Primative::Nil => NIL,
+        Primative::Int { value, .. } => Object::Int(*value),
+        Primative::Bool { value, .. } => Object::new_bool(*value),
+        Primative::Nil { .. } => NIL,
     }
     .into()
 }
 
 fn eval_prefix(expr: &Prefix, env: &Env) -> ObjResult {
     match expr.operator() {
-        Token::Bang => eval_bang_prefix(expr.right(), env),
-        Token::Minus => eval_minus_prefix(expr.right(), env),
+        TokenKind::Bang => eval_bang_prefix(expr.right(), env),
+        TokenKind::Minus => eval_minus_prefix(expr.right(), env),
         _ => Prefix::unreachable_operator(),
     }
 }
@@ -155,40 +155,40 @@ fn eval_infix(expr: &Infix, env: &Env) -> ObjResult {
     Ok(ret)
 }
 
-fn eval_integer_infix(left: i64, right: i64, operator: &Token) -> ObjResult {
+fn eval_integer_infix(left: i64, right: i64, operator: &TokenKind) -> ObjResult {
     let ret = match operator {
-        Token::Minus => Object::Int(left - right),
-        Token::Plus => Object::Int(left + right),
-        Token::Asterisk => Object::Int(left * right),
-        Token::ForwardSlash => {
+        TokenKind::Minus => Object::Int(left - right),
+        TokenKind::Plus => Object::Int(left + right),
+        TokenKind::Asterisk => Object::Int(left * right),
+        TokenKind::ForwardSlash => {
             if right == 0 {
                 return Err(anyhow::anyhow!("Error: divide by zero"));
             }
             Object::Int(left / right)
         }
-        Token::Equal => Object::new_bool(left == right),
-        Token::NotEqual => Object::new_bool(left != right),
-        Token::LT => Object::new_bool(left < right),
-        Token::GT => Object::new_bool(left > right),
+        TokenKind::Equal => Object::new_bool(left == right),
+        TokenKind::NotEqual => Object::new_bool(left != right),
+        TokenKind::LT => Object::new_bool(left < right),
+        TokenKind::GT => Object::new_bool(left > right),
         token => Object::Error(format!("unknown operator: INTEGER {} INTEGER", token)),
     };
     Ok(ret.into())
 }
 
-fn eval_string_infix(left: &str, right: &str, operator: &Token) -> Rc<Object> {
+fn eval_string_infix(left: &str, right: &str, operator: &TokenKind) -> Rc<Object> {
     match operator {
-        Token::Plus => Object::String(format!("{}{}", left, right)),
-        Token::Equal => Object::new_bool(left == right),
-        Token::NotEqual => Object::new_bool(left != right),
+        TokenKind::Plus => Object::String(format!("{}{}", left, right)),
+        TokenKind::Equal => Object::new_bool(left == right),
+        TokenKind::NotEqual => Object::new_bool(left != right),
         token => Object::Error(format!("unknown operator: STRING {} STRING", token)),
     }
     .into()
 }
 
-fn eval_bool_infix(left: bool, right: bool, operator: &Token) -> ObjResult {
+fn eval_bool_infix(left: bool, right: bool, operator: &TokenKind) -> ObjResult {
     let ret = match operator {
-        Token::Equal => Object::new_bool(left == right),
-        Token::NotEqual => Object::new_bool(left != right),
+        TokenKind::Equal => Object::new_bool(left == right),
+        TokenKind::NotEqual => Object::new_bool(left != right),
         token => Object::Error(format!("unknown operator: BOOLEAN {} BOOLEAN", token)),
     };
     Ok(ret.into())
@@ -249,7 +249,7 @@ fn eval_fn_call(expr: &Call, env: &Env) -> ObjResult {
         }
 
         for (param, arg) in params.iter().zip(arg_objs) {
-            env.set(param, Rc::clone(&arg))
+            env.set(param.value(), Rc::clone(&arg))
         }
         return eval_block(func.body(), &new_env(Some(env)));
     }
@@ -265,7 +265,7 @@ fn eval_fn_call(expr: &Call, env: &Env) -> ObjResult {
             }
 
             for (param, arg) in params.iter().zip(arg_objs) {
-                env.set(param, Rc::clone(&arg))
+                env.set(param.value(), Rc::clone(&arg))
             }
             eval_block(func.body(), &new_env(Some(env)))
         }
