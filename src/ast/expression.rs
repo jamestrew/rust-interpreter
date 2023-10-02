@@ -76,7 +76,7 @@ impl Identifier {
 
     pub fn value(&self) -> Rc<str> {
         if let TokenKind::Identifier(ident) = self.token.kind() {
-            return Rc::clone(ident);
+            Rc::clone(ident)
         } else {
             unreachable!()
         }
@@ -90,7 +90,7 @@ impl TryFrom<Token> for Identifier {
 
     fn try_from(token: Token) -> Result<Self, Self::Error> {
         if let TokenKind::Identifier(_) = token.kind() {
-            return Ok(Self { token });
+            Ok(Self { token })
         } else {
             Err(anyhow::anyhow!(
                 "Unexpected token kind '{:?}'. Expected 'Identifier'.",
@@ -227,7 +227,7 @@ impl Prefix {
     }
 
     pub fn operator(&self) -> &TokenKind {
-        &self.token.kind()
+        self.token.kind()
     }
 
     pub fn right(&self) -> &Expression {
@@ -287,7 +287,7 @@ impl Infix {
     }
 
     pub fn operator(&self) -> &TokenKind {
-        &self.token.kind()
+        self.token.kind()
     }
 
     pub fn left(&self) -> &Expression {

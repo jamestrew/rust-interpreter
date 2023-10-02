@@ -203,7 +203,7 @@ impl Parser {
 
     fn parse_primative(&mut self) -> anyhow::Result<Primative> {
         let prim_token = self.current_token()?.clone();
-        Ok(Primative::try_from(prim_token)?)
+        Primative::try_from(prim_token)
     }
 
     fn parse_string_literal(&mut self) -> anyhow::Result<StringLiteral> {
