@@ -50,12 +50,8 @@ pub struct Let {
 impl Node for Let {}
 
 impl Let {
-    pub fn new(name: Identifier, value: Expression) -> Self {
-        Self {
-            token: Token::Let,
-            name,
-            value,
-        }
+    pub fn new(token: Token, name: Identifier, value: Expression) -> Self {
+        Self { token, name, value }
     }
 
     pub fn name(&self) -> &Identifier {
@@ -91,11 +87,8 @@ pub struct Return {
 impl Node for Return {}
 
 impl Return {
-    pub fn new(value: Expression) -> Self {
-        Self {
-            token: Token::Return,
-            value,
-        }
+    pub fn new(token: Token, value: Expression) -> Self {
+        Self { token, value }
     }
 
     pub fn value(&self) -> &Expression {
@@ -126,11 +119,8 @@ pub struct Block {
 impl Node for Block {}
 
 impl Block {
-    pub fn new(statements: Vec<Statement>) -> Self {
-        Self {
-            token: Token::LBrace,
-            statements,
-        }
+    pub fn new(token: Token, statements: Vec<Statement>) -> Self {
+        Self { token, statements }
     }
 
     pub fn statements(&self) -> &[Statement] {

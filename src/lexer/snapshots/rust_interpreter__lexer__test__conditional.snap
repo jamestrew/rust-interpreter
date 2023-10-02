@@ -1,31 +1,155 @@
 ---
 source: src/lexer/mod.rs
-expression: "(r#\"if (5 < 10) {\n    return true;\n} else {\n    return false;\n}\"#, tokens)"
+description: "if (5 < 10) {\n        return true;\n    } else {\n        return false;\n    }"
+expression: "debug_print(r\"if (5 < 10) {\n        return true;\n    } else {\n        return false;\n    }\",\n    tokens)"
 ---
-(
-    "if (5 < 10) {\n    return true;\n} else {\n    return false;\n}",
-    [
-        If,
-        LParen,
-        Int(
-            "5",
-        ),
-        LT,
-        Int(
-            "10",
-        ),
-        RParen,
-        LBrace,
-        Return,
-        True,
-        Semicolon,
-        RBrace,
-        Else,
-        LBrace,
-        Return,
-        False,
-        Semicolon,
-        RBrace,
-        Eof,
-    ],
-)
+[
+    T {
+        token: Token {
+            token_kind: If,
+            line: 0,
+            span: 0..2,
+        },
+        slice: "if",
+    },
+    T {
+        token: Token {
+            token_kind: LParen,
+            line: 0,
+            span: 3..4,
+        },
+        slice: "(",
+    },
+    T {
+        token: Token {
+            token_kind: Int(
+                "5",
+            ),
+            line: 0,
+            span: 4..5,
+        },
+        slice: "5",
+    },
+    T {
+        token: Token {
+            token_kind: LT,
+            line: 0,
+            span: 6..7,
+        },
+        slice: "<",
+    },
+    T {
+        token: Token {
+            token_kind: Int(
+                "10",
+            ),
+            line: 0,
+            span: 8..10,
+        },
+        slice: "10",
+    },
+    T {
+        token: Token {
+            token_kind: RParen,
+            line: 0,
+            span: 10..11,
+        },
+        slice: ")",
+    },
+    T {
+        token: Token {
+            token_kind: LBrace,
+            line: 0,
+            span: 12..13,
+        },
+        slice: "{",
+    },
+    T {
+        token: Token {
+            token_kind: Return,
+            line: 1,
+            span: 8..14,
+        },
+        slice: "return",
+    },
+    T {
+        token: Token {
+            token_kind: True,
+            line: 1,
+            span: 15..19,
+        },
+        slice: "true",
+    },
+    T {
+        token: Token {
+            token_kind: Semicolon,
+            line: 1,
+            span: 19..20,
+        },
+        slice: ";",
+    },
+    T {
+        token: Token {
+            token_kind: RBrace,
+            line: 2,
+            span: 4..5,
+        },
+        slice: "}",
+    },
+    T {
+        token: Token {
+            token_kind: Else,
+            line: 2,
+            span: 6..10,
+        },
+        slice: "else",
+    },
+    T {
+        token: Token {
+            token_kind: LBrace,
+            line: 2,
+            span: 11..12,
+        },
+        slice: "{",
+    },
+    T {
+        token: Token {
+            token_kind: Return,
+            line: 3,
+            span: 8..14,
+        },
+        slice: "return",
+    },
+    T {
+        token: Token {
+            token_kind: False,
+            line: 3,
+            span: 15..20,
+        },
+        slice: "false",
+    },
+    T {
+        token: Token {
+            token_kind: Semicolon,
+            line: 3,
+            span: 20..21,
+        },
+        slice: ";",
+    },
+    T {
+        token: Token {
+            token_kind: RBrace,
+            line: 4,
+            span: 4..5,
+        },
+        slice: "}",
+    },
+    T {
+        token: Token {
+            token_kind: Eof,
+            line: 4,
+            span: 5..5,
+        },
+        slice: "",
+    },
+]

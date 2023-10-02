@@ -4,7 +4,6 @@ use std::rc::Rc;
 
 use super::builtin::Builtin;
 use super::object::Object;
-use crate::ast::Identifier;
 
 pub type Env = Rc<RefCell<Environment>>;
 
@@ -18,7 +17,7 @@ pub fn new_env(outer: Option<Environment>) -> Env {
 
 #[derive(Debug)]
 pub struct Environment {
-    store: HashMap<Identifier, Rc<Object>>,
+    store: HashMap<Rc<str>, Rc<Object>>,
     outer: Option<Env>,
 }
 
@@ -41,14 +40,14 @@ impl Environment {
         }
     }
 
-    pub fn get(&self, ident: &Identifier) -> Option<Rc<Object>> {
+    pub fn get(&self, ident: Rc<str>) -> Option<Rc<Object>> {
         self.store
-            .get(ident)
+            .get(&ident)
             .cloned()
             .or_else(|| self.outer.as_ref()?.borrow().get(ident))
     }
 
-    pub fn set(&mut self, ident: &Identifier, obj: Rc<Object>) {
-        self.store.insert(ident.clone(), obj);
+    pub fn set(&mut self, ident: Rc<str>, obj: Rc<Object>) {
+        self.store.insert(ident, obj);
     }
 }

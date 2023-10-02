@@ -1,14 +1,33 @@
 ---
 source: src/lexer/mod.rs
-expression: "(r#\"\"hello world\";\"#, tokens)"
+description: "\"hello world\";"
+expression: "debug_print(r#\"\"hello world\";\"#, tokens)"
 ---
-(
-    "\"hello world\";",
-    [
-        Str(
-            "hello world",
-        ),
-        Semicolon,
-        Eof,
-    ],
-)
+[
+    T {
+        token: Token {
+            token_kind: Str(
+                "hello world",
+            ),
+            line: 0,
+            span: 0..13,
+        },
+        slice: "\"hello world\"",
+    },
+    T {
+        token: Token {
+            token_kind: Semicolon,
+            line: 0,
+            span: 13..14,
+        },
+        slice: ";",
+    },
+    T {
+        token: Token {
+            token_kind: Eof,
+            line: 0,
+            span: 14..14,
+        },
+        slice: "",
+    },
+]

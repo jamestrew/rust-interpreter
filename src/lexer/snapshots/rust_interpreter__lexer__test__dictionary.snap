@@ -1,20 +1,67 @@
 ---
 source: src/lexer/mod.rs
-expression: "(r#\"{ \"foo\": \"bar\" };\"#, tokens)"
+description: "{ \"foo\": \"bar\" };"
+expression: "debug_print(r#\"{ \"foo\": \"bar\" };\"#, tokens)"
 ---
-(
-    "{ \"foo\": \"bar\" };",
-    [
-        LBrace,
-        Str(
-            "foo",
-        ),
-        Colon,
-        Str(
-            "bar",
-        ),
-        RBrace,
-        Semicolon,
-        Eof,
-    ],
-)
+[
+    T {
+        token: Token {
+            token_kind: LBrace,
+            line: 0,
+            span: 0..1,
+        },
+        slice: "{",
+    },
+    T {
+        token: Token {
+            token_kind: Str(
+                "foo",
+            ),
+            line: 0,
+            span: 2..7,
+        },
+        slice: "\"foo\"",
+    },
+    T {
+        token: Token {
+            token_kind: Colon,
+            line: 0,
+            span: 7..8,
+        },
+        slice: ":",
+    },
+    T {
+        token: Token {
+            token_kind: Str(
+                "bar",
+            ),
+            line: 0,
+            span: 9..14,
+        },
+        slice: "\"bar\"",
+    },
+    T {
+        token: Token {
+            token_kind: RBrace,
+            line: 0,
+            span: 15..16,
+        },
+        slice: "}",
+    },
+    T {
+        token: Token {
+            token_kind: Semicolon,
+            line: 0,
+            span: 16..17,
+        },
+        slice: ";",
+    },
+    T {
+        token: Token {
+            token_kind: Eof,
+            line: 0,
+            span: 17..17,
+        },
+        slice: "",
+    },
+]

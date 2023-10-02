@@ -1,18 +1,65 @@
 ---
 source: src/lexer/mod.rs
-expression: "(\"!-/*5;\", tokens)"
+description: "!-/*5;"
+expression: "debug_print(\"!-/*5;\", tokens)"
 ---
-(
-    "!-/*5;",
-    [
-        Bang,
-        Minus,
-        ForwardSlash,
-        Asterisk,
-        Int(
-            "5",
-        ),
-        Semicolon,
-        Eof,
-    ],
-)
+[
+    T {
+        token: Token {
+            token_kind: Bang,
+            line: 0,
+            span: 0..1,
+        },
+        slice: "!",
+    },
+    T {
+        token: Token {
+            token_kind: Minus,
+            line: 0,
+            span: 1..2,
+        },
+        slice: "-",
+    },
+    T {
+        token: Token {
+            token_kind: ForwardSlash,
+            line: 0,
+            span: 2..3,
+        },
+        slice: "/",
+    },
+    T {
+        token: Token {
+            token_kind: Asterisk,
+            line: 0,
+            span: 3..4,
+        },
+        slice: "*",
+    },
+    T {
+        token: Token {
+            token_kind: Int(
+                "5",
+            ),
+            line: 0,
+            span: 4..5,
+        },
+        slice: "5",
+    },
+    T {
+        token: Token {
+            token_kind: Semicolon,
+            line: 0,
+            span: 5..6,
+        },
+        slice: ";",
+    },
+    T {
+        token: Token {
+            token_kind: Eof,
+            line: 0,
+            span: 6..6,
+        },
+        slice: "",
+    },
+]

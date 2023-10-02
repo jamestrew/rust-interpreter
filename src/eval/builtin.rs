@@ -3,7 +3,6 @@ use std::rc::Rc;
 use super::environment::Environment;
 use super::object::*;
 use super::ObjResult;
-use crate::ast::Identifier;
 
 fn len(args: &[Rc<Object>]) -> ObjResult {
     check_arg_length(args, 1, "len")?;
@@ -105,7 +104,7 @@ pub enum Builtin {
 
 impl Builtin {
     pub fn register(env: &mut Environment) {
-        let mut reg = |f: Self| env.set(&Identifier::new(f.as_str()), Rc::new(Object::Builtin(f)));
+        let mut reg = |f: Self| env.set(Rc::from(f.as_str()), Rc::new(Object::Builtin(f)));
 
         reg(Self::Len);
         reg(Self::Puts);
