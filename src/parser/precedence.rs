@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use crate::lexer::Token;
+use crate::lexer::TokenKind;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Precedence {
@@ -13,15 +13,15 @@ pub enum Precedence {
     Index,
 }
 
-impl From<&Token> for Precedence {
-    fn from(token: &Token) -> Self {
+impl From<&TokenKind> for Precedence {
+    fn from(token: &TokenKind) -> Self {
         match token {
-            Token::Equal | Token::NotEqual => Self::Equals,
-            Token::LT | Token::GT => Self::LessGreater,
-            Token::Plus | Token::Minus => Self::Sum,
-            Token::Asterisk | Token::ForwardSlash => Self::Product,
-            Token::LParen => Self::Call,
-            Token::LBracket => Self::Index,
+            TokenKind::Equal | TokenKind::NotEqual => Self::Equals,
+            TokenKind::LT | TokenKind::GT => Self::LessGreater,
+            TokenKind::Plus | TokenKind::Minus => Self::Sum,
+            TokenKind::Asterisk | TokenKind::ForwardSlash => Self::Product,
+            TokenKind::LParen => Self::Call,
+            TokenKind::LBracket => Self::Index,
             _ => Self::Lowest,
         }
     }

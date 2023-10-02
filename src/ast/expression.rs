@@ -2,13 +2,13 @@ use std::fmt::{Debug, Display};
 use std::rc::Rc;
 
 use super::*;
-use crate::lexer::Token;
+use crate::lexer::{Token, TokenKind};
 
 #[derive(PartialEq, Clone)]
 pub enum Expression {
     Identifier(Identifier),
     Primative(Primative),
-    StringLiteral(Rc<str>),
+    StringLiteral(StringLiteral),
     Prefix(Prefix),
     Infix(Infix),
     If(If),
@@ -26,7 +26,7 @@ impl Debug for Expression {
         match self {
             Expression::Identifier(val) => write!(f, "{:?}", val),
             Expression::Primative(val) => write!(f, "{:?}", val),
-            Expression::StringLiteral(val) => write!(f, "StringLiteral({:?})", val),
+            Expression::StringLiteral(val) => write!(f, "{:?}", val),
             Expression::Prefix(val) => write!(f, "{:?}", val),
             Expression::Infix(val) => write!(f, "{:?}", val),
             Expression::If(val) => write!(f, "{:?}", val),
@@ -66,77 +66,77 @@ impl Display for Expression {
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct Identifier {
-    value: Rc<str>,
+    token: Token,
 }
 
 impl Identifier {
-    pub fn new(val: &str) -> Self {
-        Self { value: val.into() }
+    pub fn new(token: Token) -> Self {
+        Self { token }
+    }
+
+    pub fn value(&self) -> Rc<str> {
+        if let TokenKind::Identifier(ident) = self.token.kind() {
+            return Rc::clone(ident);
+        } else {
+            unreachable!()
+        }
     }
 }
 
 impl Node for Identifier {}
 
-impl From<&Rc<str>> for Identifier {
-    fn from(value: &Rc<str>) -> Self {
-        Self {
-            value: value.clone(),
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Token> for Identifier {
+impl TryFrom<Token> for Identifier {
     type Error = anyhow::Error;
 
-    fn try_from(token: &'a Token) -> anyhow::Result<Self> {
-        if let Token::Identifier(ident) = token {
-            Ok(Self {
-                value: ident.clone(),
-            })
+    fn try_from(token: Token) -> Result<Self, Self::Error> {
+        if let TokenKind::Identifier(_) = token.kind() {
+            return Ok(Self { token });
         } else {
-            Err(anyhow::anyhow!("Invalid identifier: {}", token))
+            Err(anyhow::anyhow!(
+                "Unexpected token kind '{:?}'. Expected 'Identifier'.",
+                token.kind()
+            ))
         }
-    }
-}
-
-impl std::ops::Deref for Identifier {
-    type Target = Rc<str>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.value
     }
 }
 
 impl Debug for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Identifier({:?})", self.value)
+        write!(f, "Identifier({:?})", self.value())
     }
 }
 
 impl Display for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.value)
+        write!(f, "{}", self.value())
     }
 }
 
 #[derive(PartialEq, Clone)]
 pub enum Primative {
-    Int(i64),
-    Bool(bool),
-    Nil,
+    Int { token: Token, value: i64 },
+    Bool { token: Token, value: bool },
+    Nil { token: Token },
 }
 
 impl Node for Primative {}
 
-impl TryFrom<&Token> for Primative {
+impl TryFrom<Token> for Primative {
     type Error = anyhow::Error;
 
-    fn try_from(token: &Token) -> anyhow::Result<Self> {
-        match token {
-            Token::Int(val) => Ok(Self::Int(val.parse::<i64>()?)),
-            Token::True => Ok(Self::Bool(true)),
-            Token::False => Ok(Self::Bool(false)),
-            Token::Nil => Ok(Self::Nil),
+    fn try_from(token: Token) -> Result<Self, Self::Error> {
+        let kind = token.kind().clone();
+        match kind {
+            TokenKind::Int(val) => Ok(Self::Int {
+                token,
+                value: val.parse::<i64>()?,
+            }),
+            TokenKind::True => Ok(Self::Bool { token, value: true }),
+            TokenKind::False => Ok(Self::Bool {
+                token,
+                value: false,
+            }),
+            TokenKind::Nil => Ok(Self::Nil { token }),
             _ => unreachable!("Primative parse unexpected {:?}", token),
         }
     }
@@ -145,9 +145,9 @@ impl TryFrom<&Token> for Primative {
 impl Debug for Primative {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Int(val) => write!(f, "Int({val})"),
-            Self::Bool(val) => write!(f, "Bool({val})"),
-            Self::Nil => write!(f, "Nil"),
+            Self::Int { value, .. } => write!(f, "Int({value})"),
+            Self::Bool { value, .. } => write!(f, "Bool({value})"),
+            Self::Nil { .. } => write!(f, "Nil"),
         }
     }
 }
@@ -155,9 +155,49 @@ impl Debug for Primative {
 impl Display for Primative {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Primative::Int(val) => write!(f, "{}", val),
-            Primative::Bool(val) => write!(f, "{}", val),
-            Primative::Nil => write!(f, "nil"),
+            Self::Int { value, .. } => write!(f, "{value}"),
+            Self::Bool { value, .. } => write!(f, "{value}"),
+            Self::Nil { .. } => write!(f, "Nil"),
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
+pub struct StringLiteral {
+    token: Token,
+}
+
+impl Node for StringLiteral {}
+
+impl From<Token> for StringLiteral {
+    fn from(token: Token) -> Self {
+        if let TokenKind::Str(_) = token.kind() {
+            Self { token }
+        } else {
+            unreachable!(
+                "Unable to generate StringLiteral from {} token kind",
+                token.kind()
+            )
+        }
+    }
+}
+
+impl Debug for StringLiteral {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let TokenKind::Str(val) = self.token.kind() {
+            write!(f, "StringLiteral(\"{}\")", val)
+        } else {
+            unreachable!()
+        }
+    }
+}
+
+impl Display for StringLiteral {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let TokenKind::Str(val) = self.token.kind() {
+            write!(f, "{val}")
+        } else {
+            unreachable!()
         }
     }
 }
@@ -179,15 +219,15 @@ impl Prefix {
     }
 
     fn operator_str(&self) -> &'static str {
-        match self.token {
-            Token::Minus => "-",
-            Token::Bang => "!",
+        match self.token.kind() {
+            TokenKind::Minus => "-",
+            TokenKind::Bang => "!",
             _ => Self::unreachable_operator(),
         }
     }
 
-    pub fn operator(&self) -> &Token {
-        &self.token
+    pub fn operator(&self) -> &TokenKind {
+        &self.token.kind()
     }
 
     pub fn right(&self) -> &Expression {
@@ -233,21 +273,21 @@ impl Infix {
     }
 
     pub fn operator_str(&self) -> &'static str {
-        match &self.token {
-            Token::Minus => "-",
-            Token::Plus => "+",
-            Token::Asterisk => "*",
-            Token::ForwardSlash => "/",
-            Token::Equal => "==",
-            Token::NotEqual => "!=",
-            Token::LT => "<",
-            Token::GT => ">",
+        match &self.token.kind() {
+            TokenKind::Minus => "-",
+            TokenKind::Plus => "+",
+            TokenKind::Asterisk => "*",
+            TokenKind::ForwardSlash => "/",
+            TokenKind::Equal => "==",
+            TokenKind::NotEqual => "!=",
+            TokenKind::LT => "<",
+            TokenKind::GT => ">",
             token => Infix::unreachable_operator(token),
         }
     }
 
-    pub fn operator(&self) -> &Token {
-        &self.token
+    pub fn operator(&self) -> &TokenKind {
+        &self.token.kind()
     }
 
     pub fn left(&self) -> &Expression {
@@ -258,7 +298,7 @@ impl Infix {
         &self.right
     }
 
-    pub fn unreachable_operator(token: &Token) -> ! {
+    pub fn unreachable_operator(token: &TokenKind) -> ! {
         unreachable!("unallowed infix operator {:?}", token)
     }
 }
@@ -290,9 +330,14 @@ pub struct If {
 impl Node for If {}
 
 impl If {
-    pub fn new(condition: Expression, consequence: Block, alternative: Option<Block>) -> Self {
+    pub fn new(
+        token: Token,
+        condition: Expression,
+        consequence: Block,
+        alternative: Option<Block>,
+    ) -> Self {
         Self {
-            token: Token::If,
+            token,
             condition: Box::new(condition),
             consequence,
             alternative,
@@ -336,6 +381,7 @@ impl Display for If {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Function {
+    token: Token,
     params: Vec<Identifier>,
     body: Block,
 }
@@ -343,8 +389,12 @@ pub struct Function {
 impl Node for Function {}
 
 impl Function {
-    pub fn new(params: Vec<Identifier>, body: Block) -> Self {
-        Self { params, body }
+    pub fn new(token: Token, params: Vec<Identifier>, body: Block) -> Self {
+        Self {
+            token,
+            params,
+            body,
+        }
     }
 
     pub fn params(&self) -> &[Identifier] {
@@ -371,6 +421,7 @@ impl Display for Function {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Call {
+    token: Token,
     function: Box<Expression>,
     args: Vec<Expression>,
 }
@@ -378,8 +429,9 @@ pub struct Call {
 impl Node for Call {}
 
 impl Call {
-    pub fn new(function: Expression, args: Vec<Expression>) -> Self {
+    pub fn new(token: Token, function: Expression, args: Vec<Expression>) -> Self {
         Self {
+            token,
             function: Box::new(function),
             args,
         }
@@ -409,13 +461,18 @@ impl Display for Call {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Hash {
+    token: Token,
     keys: Vec<Expression>,
     values: Vec<Expression>,
 }
 
 impl Hash {
-    pub fn new(keys: Vec<Expression>, values: Vec<Expression>) -> Self {
-        Self { keys, values }
+    pub fn new(token: Token, keys: Vec<Expression>, values: Vec<Expression>) -> Self {
+        Self {
+            token,
+            keys,
+            values,
+        }
     }
 
     pub fn items(&self) -> impl Iterator<Item = (&Expression, &Expression)> {
@@ -440,13 +497,15 @@ impl Display for Hash {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Index {
+    token: Token,
     left: Box<Expression>,
     index: Box<Expression>,
 }
 
 impl Index {
-    pub fn new(left: Expression, index: Expression) -> Self {
+    pub fn new(token: Token, left: Expression, index: Expression) -> Self {
         Self {
+            token,
             left: Box::new(left),
             index: Box::new(index),
         }

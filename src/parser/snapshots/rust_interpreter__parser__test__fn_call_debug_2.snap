@@ -5,6 +5,6 @@ expression: stmts
 ---
 [
     ExpressionStatement(
-        Call { function: Identifier("add"), args: [Identifier("x")] },
+        Call { token: Token { token_kind: LParen, line: 0, span: 3..4 }, function: Identifier("add"), args: [Identifier("x")] },
     ),
 ]
