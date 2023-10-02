@@ -1,22 +1,69 @@
 ---
 source: src/lexer/mod.rs
-expression: "(\"5 < 10 > 5;\", tokens)"
+description: 5 < 10 > 5;
+expression: "debug_print(\"5 < 10 > 5;\", tokens)"
 ---
-(
-    "5 < 10 > 5;",
-    [
-        Int(
-            "5",
-        ),
-        LT,
-        Int(
-            "10",
-        ),
-        GT,
-        Int(
-            "5",
-        ),
-        Semicolon,
-        Eof,
-    ],
-)
+[
+    T {
+        token: Token {
+            token_kind: Int(
+                "5",
+            ),
+            line: 0,
+            span: 0..1,
+        },
+        slice: "5",
+    },
+    T {
+        token: Token {
+            token_kind: LT,
+            line: 0,
+            span: 2..3,
+        },
+        slice: "<",
+    },
+    T {
+        token: Token {
+            token_kind: Int(
+                "10",
+            ),
+            line: 0,
+            span: 4..6,
+        },
+        slice: "10",
+    },
+    T {
+        token: Token {
+            token_kind: GT,
+            line: 0,
+            span: 7..8,
+        },
+        slice: ">",
+    },
+    T {
+        token: Token {
+            token_kind: Int(
+                "5",
+            ),
+            line: 0,
+            span: 9..10,
+        },
+        slice: "5",
+    },
+    T {
+        token: Token {
+            token_kind: Semicolon,
+            line: 0,
+            span: 10..11,
+        },
+        slice: ";",
+    },
+    T {
+        token: Token {
+            token_kind: Eof,
+            line: 0,
+            span: 11..11,
+        },
+        slice: "",
+    },
+]

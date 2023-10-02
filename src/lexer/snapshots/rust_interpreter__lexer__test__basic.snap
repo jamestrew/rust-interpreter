@@ -1,0 +1,23 @@
+---
+source: src/lexer/mod.rs
+description: "="
+expression: "debug_print(\"=\", tokens)"
+---
+[
+    T {
+        token: Token {
+            token_kind: Assign,
+            line: 0,
+            span: 0..1,
+        },
+        slice: "=",
+    },
+    T {
+        token: Token {
+            token_kind: Eof,
+            line: 0,
+            span: 1..1,
+        },
+        slice: "",
+    },
+]

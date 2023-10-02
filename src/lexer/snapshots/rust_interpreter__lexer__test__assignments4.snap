@@ -1,28 +1,103 @@
 ---
 source: src/lexer/mod.rs
-expression: "(\"let result = add(five, ten);\", tokens)"
+description: "let result = add(five, ten);"
+expression: "debug_print(\"let result = add(five, ten);\", tokens)"
 ---
-(
-    "let result = add(five, ten);",
-    [
-        Let,
-        Identifier(
-            "result",
-        ),
-        Assign,
-        Identifier(
-            "add",
-        ),
-        LParen,
-        Identifier(
-            "five",
-        ),
-        Comma,
-        Identifier(
-            "ten",
-        ),
-        RParen,
-        Semicolon,
-        Eof,
-    ],
-)
+[
+    T {
+        token: Token {
+            token_kind: Let,
+            line: 0,
+            span: 0..3,
+        },
+        slice: "let",
+    },
+    T {
+        token: Token {
+            token_kind: Identifier(
+                "result",
+            ),
+            line: 0,
+            span: 4..10,
+        },
+        slice: "result",
+    },
+    T {
+        token: Token {
+            token_kind: Assign,
+            line: 0,
+            span: 11..12,
+        },
+        slice: "=",
+    },
+    T {
+        token: Token {
+            token_kind: Identifier(
+                "add",
+            ),
+            line: 0,
+            span: 13..16,
+        },
+        slice: "add",
+    },
+    T {
+        token: Token {
+            token_kind: LParen,
+            line: 0,
+            span: 16..17,
+        },
+        slice: "(",
+    },
+    T {
+        token: Token {
+            token_kind: Identifier(
+                "five",
+            ),
+            line: 0,
+            span: 17..21,
+        },
+        slice: "five",
+    },
+    T {
+        token: Token {
+            token_kind: Comma,
+            line: 0,
+            span: 21..22,
+        },
+        slice: ",",
+    },
+    T {
+        token: Token {
+            token_kind: Identifier(
+                "ten",
+            ),
+            line: 0,
+            span: 23..26,
+        },
+        slice: "ten",
+    },
+    T {
+        token: Token {
+            token_kind: RParen,
+            line: 0,
+            span: 26..27,
+        },
+        slice: ")",
+    },
+    T {
+        token: Token {
+            token_kind: Semicolon,
+            line: 0,
+            span: 27..28,
+        },
+        slice: ";",
+    },
+    T {
+        token: Token {
+            token_kind: Eof,
+            line: 0,
+            span: 28..28,
+        },
+        slice: "",
+    },
+]

@@ -1,7 +1,42 @@
+use std::ops::Range;
 use std::rc::Rc;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum Token {
+pub struct Token {
+    pub token_kind: TokenKind,
+    pub line: usize,
+    pub span: Range<usize>,
+}
+
+impl Token {
+    pub fn new(token_kind: TokenKind, line: usize, span: Range<usize>) -> Token {
+        let span_start = span.start;
+        let mut span_end = span.end;
+        if token_kind == TokenKind::Eof {
+            span_end = span_start;
+        }
+        Self {
+            token_kind,
+            line,
+            span: span_start..span_end,
+        }
+    }
+
+    pub fn kind(&self) -> &TokenKind {
+        &self.token_kind
+    }
+
+    pub fn start(&self) -> usize {
+        self.span.start
+    }
+
+    pub fn end(&self) -> usize {
+        self.span.end
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum TokenKind {
     Assign,
     Plus,
     Minus,
@@ -42,46 +77,46 @@ pub enum Token {
     Eof,
 }
 
-impl AsRef<Token> for Token {
-    fn as_ref(&self) -> &Token {
+impl AsRef<TokenKind> for TokenKind {
+    fn as_ref(&self) -> &TokenKind {
         self
     }
 }
 
-impl std::fmt::Display for Token {
+impl std::fmt::Display for TokenKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Token::Assign => write!(f, "="),
-            Token::Plus => write!(f, "+"),
-            Token::Minus => write!(f, "-"),
-            Token::Asterisk => write!(f, "*"),
-            Token::ForwardSlash => write!(f, "/"),
-            Token::Bang => write!(f, "!"),
-            Token::Equal => write!(f, "=="),
-            Token::NotEqual => write!(f, "!="),
-            Token::LT => write!(f, "<"),
-            Token::GT => write!(f, ">"),
-            Token::Comma => write!(f, ","),
-            Token::Semicolon => write!(f, ";"),
-            Token::Colon => write!(f, ":"),
-            Token::LParen => write!(f, "("),
-            Token::RParen => write!(f, ")"),
-            Token::LBrace => write!(f, "{{"),
-            Token::RBrace => write!(f, "}}"),
-            Token::LBracket => write!(f, "["),
-            Token::RBracket => write!(f, "]"),
-            Token::Identifier(ident) => write!(f, "{}", ident),
-            Token::Int(val) => write!(f, "{}", val),
-            Token::Str(val) => write!(f, "\"{}\"", val),
-            Token::Let => write!(f, "let"),
-            Token::Function => write!(f, "fn"),
-            Token::If => write!(f, "if"),
-            Token::Else => write!(f, "else"),
-            Token::True => write!(f, "true"),
-            Token::False => write!(f, "false"),
-            Token::Return => write!(f, "return"),
-            Token::Nil => write!(f, "nil"),
-            Token::Eof => write!(f, "EOF"),
+            TokenKind::Assign => write!(f, "="),
+            TokenKind::Plus => write!(f, "+"),
+            TokenKind::Minus => write!(f, "-"),
+            TokenKind::Asterisk => write!(f, "*"),
+            TokenKind::ForwardSlash => write!(f, "/"),
+            TokenKind::Bang => write!(f, "!"),
+            TokenKind::Equal => write!(f, "=="),
+            TokenKind::NotEqual => write!(f, "!="),
+            TokenKind::LT => write!(f, "<"),
+            TokenKind::GT => write!(f, ">"),
+            TokenKind::Comma => write!(f, ","),
+            TokenKind::Semicolon => write!(f, ";"),
+            TokenKind::Colon => write!(f, ":"),
+            TokenKind::LParen => write!(f, "("),
+            TokenKind::RParen => write!(f, ")"),
+            TokenKind::LBrace => write!(f, "{{"),
+            TokenKind::RBrace => write!(f, "}}"),
+            TokenKind::LBracket => write!(f, "["),
+            TokenKind::RBracket => write!(f, "]"),
+            TokenKind::Identifier(ident) => write!(f, "{}", ident),
+            TokenKind::Int(val) => write!(f, "{}", val),
+            TokenKind::Str(val) => write!(f, "\"{}\"", val),
+            TokenKind::Let => write!(f, "let"),
+            TokenKind::Function => write!(f, "fn"),
+            TokenKind::If => write!(f, "if"),
+            TokenKind::Else => write!(f, "else"),
+            TokenKind::True => write!(f, "true"),
+            TokenKind::False => write!(f, "false"),
+            TokenKind::Return => write!(f, "return"),
+            TokenKind::Nil => write!(f, "nil"),
+            TokenKind::Eof => write!(f, "EOF"),
         }
     }
 }
