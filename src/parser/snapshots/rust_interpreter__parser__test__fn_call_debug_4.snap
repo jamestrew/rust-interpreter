@@ -5,6 +5,6 @@ expression: stmts
 ---
 [
     ExpressionStatement(
-        Call { token: Token { token_kind: LParen, line: 0, span: 25..26 }, function: Function { token: Token { token_kind: LParen, line: 0, span: 2..3 }, params: [Identifier("x"), Identifier("y")], body: Block { statements: [Return { value: Infix { token: "+", left: Identifier("x"), right: Identifier("y") } }] } }, args: [Int(1), Int(2)] },
+        Call { token: Spanned(0, 25..26, LParen), function: Function { token: Spanned(0, 2..3, LParen), params: [Identifier("x"), Identifier("y")], body: Block { statements: [Return { value: Infix { token: "+", left: Identifier("x"), right: Identifier("y") } }] } }, args: [Int(1), Int(2)] },
     ),
 ]

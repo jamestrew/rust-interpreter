@@ -5,6 +5,6 @@ expression: stmts
 ---
 [
     ExpressionStatement(
-        Function { token: Token { token_kind: LParen, line: 0, span: 2..3 }, params: [], body: Block { statements: [] } },
+        Function { token: Spanned(0, 2..3, LParen), params: [], body: Block { statements: [] } },
     ),
 ]

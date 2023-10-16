@@ -5,6 +5,6 @@ expression: stmts
 ---
 [
     ExpressionStatement(
-        Array[Int(1), StringLiteral("foo"), Function { token: Token { token_kind: LParen, line: 0, span: 11..12 }, params: [Identifier("x")], body: Block { statements: [ExpressionStatement(Infix { token: "+", left: Identifier("x"), right: Int(1) })] } }],
+        Array[Int(1), StringLiteral("foo"), Function { token: Spanned(0, 11..12, LParen), params: [Identifier("x")], body: Block { statements: [ExpressionStatement(Infix { token: "+", left: Identifier("x"), right: Int(1) })] } }],
     ),
 ]
