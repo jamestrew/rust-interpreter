@@ -8,11 +8,12 @@ pub use precedence::Precedence;
 use crate::ast::*;
 use crate::errors::{ParserError, Result};
 use crate::lexer::{Lexer, Token, TokenKind};
+use crate::types::Spanned;
 
 #[derive(Debug)]
 pub struct Parser {
     lexer: Lexer,
-    // prev_token: Option<Token>,
+    prev_token: Option<Token>,
     current_token: Option<Result<Token>>,
     peek_token: Option<Result<Token>>,
 }
@@ -23,7 +24,7 @@ impl Parser {
         let peek_token = lexer.next();
         Self {
             lexer,
-            // prev_token: None,
+            prev_token: None,
             current_token,
             peek_token,
         }
@@ -33,28 +34,35 @@ impl Parser {
         let mut program = Program::default();
         while !self.current_token_is(TokenKind::Eof)? {
             program.statements.push(self.parse_statement()?);
-            self.next_token();
+            self.next_token()?;
         }
         Ok(program)
     }
 
-    pub fn current_token_is<T: AsRef<TokenKind>>(&self, match_token: T) -> Result<bool> {
+    fn current_token_is<T: AsRef<TokenKind>>(&self, match_token: T) -> Result<bool> {
         Ok(*match_token.as_ref() == **self.current_token()?)
     }
 
-    pub fn peek_token_is<T: AsRef<TokenKind>>(&self, match_token: T) -> Result<bool> {
+    fn peek_token_is<T: AsRef<TokenKind>>(&self, match_token: T) -> Result<bool> {
         Ok(*match_token.as_ref() == **self.peek_token()?)
     }
 
-    pub fn current_token(&self) -> Result<&Token> {
-        match &self.current_token {
-            Some(Ok(token)) => Ok(token),
-            Some(Err(err)) => Err(err.clone()),
-            None => todo!("return UnexpectedEOF with prev_token span"),
+    fn prev_token(&self) -> Result<&Token> {
+        match &self.prev_token {
+            Some(token) => Ok(token),
+            None => Err(Spanned::new(0, 0..0, ParserError::UnexpectedEOF.into())),
         }
     }
 
-    pub fn peek_token(&self) -> Result<&Token> {
+    fn current_token(&self) -> Result<&Token> {
+        match &self.current_token {
+            Some(Ok(token)) => Ok(token),
+            Some(Err(err)) => Err(err.clone()),
+            None => Err(self.prev_token()?.map(ParserError::UnexpectedEOF.into())),
+        }
+    }
+
+    fn peek_token(&self) -> Result<&Token> {
         match &self.peek_token {
             Some(Ok(token)) => Ok(token),
             Some(Err(err)) => Err(err.clone()),
@@ -62,14 +70,18 @@ impl Parser {
         }
     }
 
-    pub fn next_token(&mut self) {
+    fn next_token(&mut self) -> Result<()> {
+        if let Some(token_result) = self.current_token.take() {
+            self.prev_token = Some(token_result?);
+        }
         self.current_token = self.peek_token.take();
         self.peek_token = self.lexer.next();
+        Ok(())
     }
 
     fn expect_current<T: AsRef<TokenKind>>(&mut self, token: T) -> Result<Token> {
         if self.current_token_is(&token)? {
-            self.next_token();
+            self.next_token()?;
             Ok(self.current_token()?.clone())
         } else {
             Err(self
@@ -78,9 +90,9 @@ impl Parser {
         }
     }
 
-    pub fn expect_peek<T: AsRef<TokenKind>>(&mut self, token: T) -> Result<Token> {
+    fn expect_peek<T: AsRef<TokenKind>>(&mut self, token: T) -> Result<Token> {
         if self.peek_token_is(&token)? {
-            self.next_token();
+            self.next_token()?;
             Ok(self.current_token()?.clone())
         } else {
             Err(self
@@ -89,24 +101,26 @@ impl Parser {
         }
     }
 
-    pub fn eat_semicolons(&mut self) {
-        while self.peek_token_is(TokenKind::Semicolon).unwrap_or(false) {
-            self.next_token();
+    fn eat_semicolons(&mut self) -> Result<()> {
+        while self.peek_token_is(TokenKind::Semicolon)? {
+            self.next_token()?;
         }
+        Ok(())
     }
 
-    pub fn eat_comma(&mut self) {
-        if self.current_token_is(TokenKind::Comma).unwrap_or(false) {
-            self.next_token();
+    fn eat_comma(&mut self) -> Result<()> {
+        if self.current_token_is(TokenKind::Comma)? {
+            self.next_token()?;
         }
+        Ok(())
     }
 
-    pub fn current_precedence(&self) -> Result<Precedence> {
+    fn current_precedence(&self) -> Result<Precedence> {
         let token = &**self.current_token()?;
         Ok(token.into())
     }
 
-    pub fn peek_precedence(&self) -> Result<Precedence> {
+    fn peek_precedence(&self) -> Result<Precedence> {
         let token = &**self.peek_token()?;
         Ok(token.into())
     }
@@ -127,14 +141,14 @@ impl Parser {
         self.expect_peek(TokenKind::Assign)?;
         self.expect_current(TokenKind::Assign)?;
         let value = self.parse_expression(Precedence::Lowest)?;
-        self.eat_semicolons();
+        self.eat_semicolons()?;
         Ok(Statement::Let(Let::new(let_token, name, value)))
     }
 
     fn parse_return(&mut self) -> Result<Statement> {
         let ret_token = self.expect_current(TokenKind::Return)?;
         let value = self.parse_expression(Precedence::Lowest)?;
-        self.eat_semicolons();
+        self.eat_semicolons()?;
         Ok(Statement::Return(Return::new(ret_token, value)))
     }
 
@@ -146,7 +160,7 @@ impl Parser {
             && !self.current_token_is(TokenKind::Eof)?
         {
             statements.push(self.parse_statement()?);
-            self.next_token();
+            self.next_token()?;
         }
 
         Ok(Block::new(block_token, statements))
@@ -194,7 +208,7 @@ impl Parser {
             };
         }
 
-        self.eat_semicolons();
+        self.eat_semicolons()?;
         Ok(expr)
     }
 
@@ -215,17 +229,17 @@ impl Parser {
 
     fn parse_prefix(&mut self) -> Result<Prefix> {
         let op_token = self.current_token()?.clone();
-        self.next_token();
+        self.next_token()?;
         let right = self.parse_expression(Precedence::Prefix)?;
         Ok(Prefix::new(op_token, right))
     }
 
     fn parse_infix(&mut self, left: Expression) -> Result<Infix> {
-        self.next_token();
+        self.next_token()?;
         let op_token = self.current_token()?.clone();
         let op_precedence = self.current_precedence()?;
 
-        self.next_token();
+        self.next_token()?;
         let right = self.parse_expression(op_precedence)?;
         Ok(Infix::new(op_token, left, right))
     }
@@ -242,7 +256,7 @@ impl Parser {
 
         let mut alternative = None;
         if self.peek_token_is(TokenKind::Else)? {
-            self.next_token();
+            self.next_token()?;
             self.expect_peek(TokenKind::LBrace)?;
             alternative = Some(self.parse_block()?);
         }
@@ -264,8 +278,8 @@ impl Parser {
         let mut params = Vec::new();
         while !self.current_token_is(TokenKind::RParen)? {
             params.push(self.parse_identifer()?);
-            self.next_token();
-            self.eat_comma();
+            self.next_token()?;
+            self.eat_comma()?;
         }
         self.expect_current(TokenKind::RParen)?;
 
@@ -279,8 +293,8 @@ impl Parser {
         let mut elems = Vec::new();
         while !self.current_token_is(TokenKind::RBracket)? {
             elems.push(self.parse_expression(Precedence::Lowest)?);
-            self.next_token();
-            self.eat_comma();
+            self.next_token()?;
+            self.eat_comma()?;
         }
 
         Ok(elems)
@@ -294,10 +308,10 @@ impl Parser {
         while !self.current_token_is(TokenKind::RBrace)? {
             keys.push(self.parse_expression(Precedence::Lowest)?);
             self.expect_peek(TokenKind::Colon)?;
-            self.next_token();
+            self.next_token()?;
             values.push(self.parse_expression(Precedence::Lowest)?);
-            self.next_token();
-            self.eat_comma();
+            self.next_token()?;
+            self.eat_comma()?;
         }
 
         Ok(Hash::new(hash_token, keys, values))
@@ -305,13 +319,13 @@ impl Parser {
 
     fn parse_call(&mut self, func: Expression) -> Result<Call> {
         let call_token = self.expect_peek(TokenKind::LParen)?;
-        self.next_token();
+        self.next_token()?;
 
         let mut args = Vec::new();
         while !self.current_token_is(TokenKind::RParen)? {
             args.push(self.parse_expression(Precedence::Lowest)?);
-            self.next_token();
-            self.eat_comma();
+            self.next_token()?;
+            self.eat_comma()?;
         }
 
         Ok(Call::new(call_token, func, args))
@@ -319,7 +333,7 @@ impl Parser {
 
     fn parse_index(&mut self, left: Expression) -> Result<Index> {
         let idx_token = self.expect_peek(TokenKind::LBracket)?;
-        self.next_token();
+        self.next_token()?;
 
         let index = self.parse_expression(Precedence::Lowest)?;
         self.expect_peek(TokenKind::RBracket)?;

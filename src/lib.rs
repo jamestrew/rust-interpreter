@@ -1,8 +1,8 @@
 mod ast;
+mod errors;
 pub mod eval;
 pub mod lexer;
 pub mod parser;
-mod errors;
 mod types;
 
 use ast::Statement;

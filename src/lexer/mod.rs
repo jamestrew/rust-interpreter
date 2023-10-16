@@ -77,7 +77,7 @@ impl Lexer {
             0 => {
                 self.read_char();
                 return Ok(Token::new(self.row, span_start..span_start, TokenKind::Eof));
-            },
+            }
             _ => {
                 return Err(Spanned::new(
                     self.row,
