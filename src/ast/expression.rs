@@ -2,7 +2,9 @@ use std::fmt::{Debug, Display};
 use std::rc::Rc;
 
 use super::*;
+use crate::errors::{MonkeyError, ParserError};
 use crate::lexer::{Token, TokenKind};
+use crate::types::Spanned;
 
 #[derive(PartialEq, Clone)]
 pub enum Expression {
@@ -75,7 +77,7 @@ impl Identifier {
     }
 
     pub fn value(&self) -> Rc<str> {
-        if let TokenKind::Identifier(ident) = self.token.kind() {
+        if let TokenKind::Identifier(ident) = &*self.token {
             Rc::clone(ident)
         } else {
             unreachable!()
@@ -89,12 +91,12 @@ impl TryFrom<Token> for Identifier {
     type Error = anyhow::Error;
 
     fn try_from(token: Token) -> Result<Self, Self::Error> {
-        if let TokenKind::Identifier(_) = token.kind() {
+        if let TokenKind::Identifier(_) = *token {
             Ok(Self { token })
         } else {
             Err(anyhow::anyhow!(
                 "Unexpected token kind '{:?}'. Expected 'Identifier'.",
-                token.kind()
+                *token
             ))
         }
     }
@@ -122,15 +124,17 @@ pub enum Primative {
 impl Node for Primative {}
 
 impl TryFrom<Token> for Primative {
-    type Error = anyhow::Error;
+    type Error = Spanned<MonkeyError>;
 
     fn try_from(token: Token) -> Result<Self, Self::Error> {
-        let kind = token.kind().clone();
+        let kind = &*token;
         match kind {
-            TokenKind::Int(val) => Ok(Self::Int {
-                token,
-                value: val.parse::<i64>()?,
-            }),
+            TokenKind::Int(val) => {
+                let value = val.parse().map_err(|_| {
+                    token.map(ParserError::UnexpectedToken(kind.to_string()).into())
+                })?;
+                Ok(Self::Int { token, value })
+            }
             TokenKind::True => Ok(Self::Bool { token, value: true }),
             TokenKind::False => Ok(Self::Bool {
                 token,
@@ -171,12 +175,12 @@ impl Node for StringLiteral {}
 
 impl From<Token> for StringLiteral {
     fn from(token: Token) -> Self {
-        if let TokenKind::Str(_) = token.kind() {
+        if let TokenKind::Str(_) = *token {
             Self { token }
         } else {
             unreachable!(
                 "Unable to generate StringLiteral from {} token kind",
-                token.kind()
+                *token
             )
         }
     }
@@ -184,7 +188,7 @@ impl From<Token> for StringLiteral {
 
 impl Debug for StringLiteral {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let TokenKind::Str(val) = self.token.kind() {
+        if let TokenKind::Str(val) = &*self.token {
             write!(f, "StringLiteral(\"{}\")", val)
         } else {
             unreachable!()
@@ -194,7 +198,7 @@ impl Debug for StringLiteral {
 
 impl Display for StringLiteral {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let TokenKind::Str(val) = self.token.kind() {
+        if let TokenKind::Str(val) = &*self.token {
             write!(f, "{val}")
         } else {
             unreachable!()
@@ -219,7 +223,7 @@ impl Prefix {
     }
 
     fn operator_str(&self) -> &'static str {
-        match self.token.kind() {
+        match *self.token {
             TokenKind::Minus => "-",
             TokenKind::Bang => "!",
             _ => Self::unreachable_operator(),
@@ -227,7 +231,7 @@ impl Prefix {
     }
 
     pub fn operator(&self) -> &TokenKind {
-        self.token.kind()
+        &self.token
     }
 
     pub fn right(&self) -> &Expression {
@@ -273,7 +277,7 @@ impl Infix {
     }
 
     pub fn operator_str(&self) -> &'static str {
-        match &self.token.kind() {
+        match &*self.token {
             TokenKind::Minus => "-",
             TokenKind::Plus => "+",
             TokenKind::Asterisk => "*",
@@ -287,7 +291,7 @@ impl Infix {
     }
 
     pub fn operator(&self) -> &TokenKind {
-        self.token.kind()
+        &self.token
     }
 
     pub fn left(&self) -> &Expression {

@@ -1,153 +1,24 @@
 ---
-source: src/lexer/mod.rs
+source: src/lexer/test.rs
 description: "let add = fn(x, y) {\n        x + y;\n    };"
 expression: "debug_print(r\"let add = fn(x, y) {\n        x + y;\n    };\", tokens)"
 ---
 [
-    T {
-        token: Token {
-            token_kind: Let,
-            line: 0,
-            span: 0..3,
-        },
-        slice: "let",
-    },
-    T {
-        token: Token {
-            token_kind: Identifier(
-                "add",
-            ),
-            line: 0,
-            span: 4..7,
-        },
-        slice: "add",
-    },
-    T {
-        token: Token {
-            token_kind: Assign,
-            line: 0,
-            span: 8..9,
-        },
-        slice: "=",
-    },
-    T {
-        token: Token {
-            token_kind: Function,
-            line: 0,
-            span: 10..12,
-        },
-        slice: "fn",
-    },
-    T {
-        token: Token {
-            token_kind: LParen,
-            line: 0,
-            span: 12..13,
-        },
-        slice: "(",
-    },
-    T {
-        token: Token {
-            token_kind: Identifier(
-                "x",
-            ),
-            line: 0,
-            span: 13..14,
-        },
-        slice: "x",
-    },
-    T {
-        token: Token {
-            token_kind: Comma,
-            line: 0,
-            span: 14..15,
-        },
-        slice: ",",
-    },
-    T {
-        token: Token {
-            token_kind: Identifier(
-                "y",
-            ),
-            line: 0,
-            span: 16..17,
-        },
-        slice: "y",
-    },
-    T {
-        token: Token {
-            token_kind: RParen,
-            line: 0,
-            span: 17..18,
-        },
-        slice: ")",
-    },
-    T {
-        token: Token {
-            token_kind: LBrace,
-            line: 0,
-            span: 19..20,
-        },
-        slice: "{",
-    },
-    T {
-        token: Token {
-            token_kind: Identifier(
-                "x",
-            ),
-            line: 1,
-            span: 8..9,
-        },
-        slice: "x",
-    },
-    T {
-        token: Token {
-            token_kind: Plus,
-            line: 1,
-            span: 10..11,
-        },
-        slice: "+",
-    },
-    T {
-        token: Token {
-            token_kind: Identifier(
-                "y",
-            ),
-            line: 1,
-            span: 12..13,
-        },
-        slice: "y",
-    },
-    T {
-        token: Token {
-            token_kind: Semicolon,
-            line: 1,
-            span: 13..14,
-        },
-        slice: ";",
-    },
-    T {
-        token: Token {
-            token_kind: RBrace,
-            line: 2,
-            span: 4..5,
-        },
-        slice: "}",
-    },
-    T {
-        token: Token {
-            token_kind: Semicolon,
-            line: 2,
-            span: 5..6,
-        },
-        slice: ";",
-    },
-    T {
-        token: Token {
-            token_kind: Eof,
-            line: 2,
-            span: 6..6,
-        },
-        slice: "",
-    },
+    Token(token: 'let', slice: 'let'),
+    Token(token: 'add', slice: 'add'),
+    Token(token: '=', slice: '='),
+    Token(token: 'fn', slice: 'fn'),
+    Token(token: '(', slice: '('),
+    Token(token: 'x', slice: 'x'),
+    Token(token: ',', slice: ','),
+    Token(token: 'y', slice: 'y'),
+    Token(token: ')', slice: ')'),
+    Token(token: '{', slice: '{'),
+    Token(token: 'x', slice: 'x'),
+    Token(token: '+', slice: '+'),
+    Token(token: 'y', slice: 'y'),
+    Token(token: ';', slice: ';'),
+    Token(token: '}', slice: '}'),
+    Token(token: ';', slice: ';'),
+    Token(token: 'EOF', slice: ''),
 ]

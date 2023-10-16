@@ -1,79 +1,16 @@
 ---
-source: src/lexer/mod.rs
+source: src/lexer/test.rs
 description: "=+(){},;"
 expression: "debug_print(\"=+(){},;\", tokens)"
 ---
 [
-    T {
-        token: Token {
-            token_kind: Assign,
-            line: 0,
-            span: 0..1,
-        },
-        slice: "=",
-    },
-    T {
-        token: Token {
-            token_kind: Plus,
-            line: 0,
-            span: 1..2,
-        },
-        slice: "+",
-    },
-    T {
-        token: Token {
-            token_kind: LParen,
-            line: 0,
-            span: 2..3,
-        },
-        slice: "(",
-    },
-    T {
-        token: Token {
-            token_kind: RParen,
-            line: 0,
-            span: 3..4,
-        },
-        slice: ")",
-    },
-    T {
-        token: Token {
-            token_kind: LBrace,
-            line: 0,
-            span: 4..5,
-        },
-        slice: "{",
-    },
-    T {
-        token: Token {
-            token_kind: RBrace,
-            line: 0,
-            span: 5..6,
-        },
-        slice: "}",
-    },
-    T {
-        token: Token {
-            token_kind: Comma,
-            line: 0,
-            span: 6..7,
-        },
-        slice: ",",
-    },
-    T {
-        token: Token {
-            token_kind: Semicolon,
-            line: 0,
-            span: 7..8,
-        },
-        slice: ";",
-    },
-    T {
-        token: Token {
-            token_kind: Eof,
-            line: 0,
-            span: 8..8,
-        },
-        slice: "",
-    },
+    Token(token: '=', slice: '='),
+    Token(token: '+', slice: '+'),
+    Token(token: '(', slice: '('),
+    Token(token: ')', slice: ')'),
+    Token(token: '{', slice: '{'),
+    Token(token: '}', slice: '}'),
+    Token(token: ',', slice: ','),
+    Token(token: ';', slice: ';'),
+    Token(token: 'EOF', slice: ''),
 ]

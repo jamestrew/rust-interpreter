@@ -1,20 +1,13 @@
+#[cfg(test)]
+mod test;
 mod tokens;
 
-use std::str::{from_utf8, Utf8Error};
+use std::str::from_utf8;
 
-use thiserror::Error;
 pub use tokens::{Token, TokenKind};
 
-#[derive(Error, Debug)]
-enum TokenizerError {
-    #[error("Unexpected input {0}. Failed to tokenize.")]
-    UnexpectedInput(char),
-
-    #[error("Invalid non UTF-8 string found: {0}")]
-    NonUTF8Input(Utf8Error),
-}
-
-type Result<T> = std::result::Result<T, TokenizerError>;
+use crate::errors::{Result, TokenizerError};
+use crate::types::Spanned;
 
 #[derive(Debug, Default)]
 pub struct Lexer {
@@ -22,7 +15,7 @@ pub struct Lexer {
     position: usize,
     read_position: usize,
     ch: u8,
-    line: usize,
+    row: usize,
     col: usize,
 }
 
@@ -81,13 +74,22 @@ impl Lexer {
             b'0'..=b'9' => return self.get_int(),
             b'"' => return self.get_str(),
 
-            0 => TokenKind::Eof,
-            _ => return Err(TokenizerError::UnexpectedInput(self.ch as char)),
+            0 => {
+                self.read_char();
+                return Ok(Token::new(self.row, span_start..span_start, TokenKind::Eof));
+            },
+            _ => {
+                return Err(Spanned::new(
+                    self.row,
+                    span_start..span_start,
+                    TokenizerError::UnexpectedInput(self.ch as char).into(),
+                ));
+            }
         };
 
         self.read_char();
         let span_end = self.col;
-        Ok(Token::new(token_type, self.line, span_start..span_end))
+        Ok(Token::new(self.row, span_start..span_end, token_type))
     }
 
     fn skip_whitespace(&mut self) {
@@ -95,7 +97,7 @@ impl Lexer {
             let last_char = self.ch;
             self.read_char();
             if last_char == b'\n' {
-                self.line += 1;
+                self.row += 1;
                 self.col = 0;
             }
         }
@@ -122,7 +124,7 @@ impl Lexer {
 
         let span_end = self.col;
 
-        Ok(Token::new(token_type, self.line, span_start..span_end))
+        Ok(Token::new(self.row, span_start..span_end, token_type))
     }
 
     fn read_ident(&mut self) -> Result<&str> {
@@ -130,7 +132,14 @@ impl Lexer {
         while self.is_letter() {
             self.read_char()
         }
-        from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)
+
+        from_utf8(&self.input[start..self.position]).map_err(|_| {
+            Spanned::new(
+                self.row,
+                start..self.position,
+                TokenizerError::NonUTF8Input.into(),
+            )
+        })
     }
 
     fn get_int(&mut self) -> Result<Token> {
@@ -141,12 +150,17 @@ impl Lexer {
         }
 
         let span_end = self.col;
-        let val =
-            from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)?;
+        let val = from_utf8(&self.input[start..self.position]).map_err(|_| {
+            Spanned::new(
+                self.row,
+                start..self.position,
+                TokenizerError::NonUTF8Input.into(),
+            )
+        })?;
         Ok(Token::new(
-            TokenKind::Int(val.into()),
-            self.line,
+            self.row,
             span_start..span_end,
+            TokenKind::Int(val.into()),
         ))
     }
 
@@ -157,12 +171,18 @@ impl Lexer {
         while self.ch != b'"' {
             self.read_char();
         }
-        let val =
-            from_utf8(&self.input[start..self.position]).map_err(TokenizerError::NonUTF8Input)?;
+        let val = from_utf8(&self.input[start..self.position]).map_err(|_| {
+            Spanned::new(
+                self.row,
+                start..self.position,
+                TokenizerError::NonUTF8Input.into(),
+            )
+        })?;
+
         let token_type = TokenKind::Str(val.into());
         self.read_char();
         let span_end = self.col;
-        Ok(Token::new(token_type, self.line, span_start..span_end))
+        Ok(Token::new(self.row, span_start..span_end, token_type))
     }
 
     fn if_peek(&mut self, peek: u8, true_token: TokenKind, false_token: TokenKind) -> TokenKind {
@@ -181,88 +201,16 @@ impl Lexer {
 }
 
 impl Iterator for Lexer {
-    type Item = Token;
+    type Item = Result<Token>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let token = self.next_token().ok()?;
+        let token = self.next_token();
 
-        if *token.kind() == TokenKind::Eof && self.position - 1 > self.input.len() {
-            None
-        } else {
-            Some(token)
-        }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[allow(unused)]
-    #[derive(Debug)]
-    struct T<'a> {
-        token: Token,
-        slice: &'a str,
-    }
-
-    fn lex(input: &str) -> Vec<Token> {
-        let lexer = Lexer::new(input);
-
-        lexer.collect()
-    }
-
-    fn debug_print(input: &str, tokens: Vec<Token>) -> Vec<T> {
-        let lines = input.lines().collect::<Vec<_>>();
-
-        let mut ret = Vec::new();
-        for token in tokens {
-            let line = lines[token.line];
-            let slice = &line[token.span.clone()];
-            ret.push(T { token, slice });
-        }
-        ret
-    }
-
-    macro_rules! snapshot {
-        ($name:tt, $input:expr) => {
-            #[test]
-            fn $name() {
-                let tokens = lex($input);
-                insta::with_settings!({
-                    description => $input,
-                }, {
-                    insta::assert_debug_snapshot!(debug_print($input, tokens));
-                })
+        if let Ok(ref token) = token {
+            if **token == TokenKind::Eof && self.position - 1 > self.input.len() {
+                return None;
             }
-        };
+        }
+        Some(token)
     }
-
-    snapshot!(basic, "=");
-    snapshot!(symbols, "=+(){},;");
-    snapshot!(assignments1, "let five = 5;");
-    snapshot!(assignments2, "let ten = 10;");
-    snapshot!(
-        assignments3,
-        r"let add = fn(x, y) {
-        x + y;
-    };"
-    );
-    snapshot!(assignments4, "let result = add(five, ten);");
-
-    snapshot!(operators, "!-/*5;");
-    snapshot!(equality1, "5 < 10 > 5;");
-    snapshot!(equality2, "10 == 10;");
-    snapshot!(equality3, "10 != 9;");
-    snapshot!(
-        conditional,
-        r"if (5 < 10) {
-        return true;
-    } else {
-        return false;
-    }"
-    );
-
-    snapshot!(string_literal, r#""hello world";"#);
-    snapshot!(arrays, "[1, 2]");
-    snapshot!(dictionary, r#"{ "foo": "bar" };"#);
 }

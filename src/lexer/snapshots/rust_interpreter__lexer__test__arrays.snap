@@ -1,59 +1,13 @@
 ---
-source: src/lexer/mod.rs
+source: src/lexer/test.rs
 description: "[1, 2]"
 expression: "debug_print(\"[1, 2]\", tokens)"
 ---
 [
-    T {
-        token: Token {
-            token_kind: LBracket,
-            line: 0,
-            span: 0..1,
-        },
-        slice: "[",
-    },
-    T {
-        token: Token {
-            token_kind: Int(
-                "1",
-            ),
-            line: 0,
-            span: 1..2,
-        },
-        slice: "1",
-    },
-    T {
-        token: Token {
-            token_kind: Comma,
-            line: 0,
-            span: 2..3,
-        },
-        slice: ",",
-    },
-    T {
-        token: Token {
-            token_kind: Int(
-                "2",
-            ),
-            line: 0,
-            span: 4..5,
-        },
-        slice: "2",
-    },
-    T {
-        token: Token {
-            token_kind: RBracket,
-            line: 0,
-            span: 5..6,
-        },
-        slice: "]",
-    },
-    T {
-        token: Token {
-            token_kind: Eof,
-            line: 0,
-            span: 6..6,
-        },
-        slice: "",
-    },
+    Token(token: '[', slice: '['),
+    Token(token: '1', slice: '1'),
+    Token(token: ',', slice: ','),
+    Token(token: '2', slice: '2'),
+    Token(token: ']', slice: ']'),
+    Token(token: 'EOF', slice: ''),
 ]

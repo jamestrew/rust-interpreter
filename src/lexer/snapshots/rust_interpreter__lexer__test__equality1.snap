@@ -1,69 +1,14 @@
 ---
-source: src/lexer/mod.rs
+source: src/lexer/test.rs
 description: 5 < 10 > 5;
 expression: "debug_print(\"5 < 10 > 5;\", tokens)"
 ---
 [
-    T {
-        token: Token {
-            token_kind: Int(
-                "5",
-            ),
-            line: 0,
-            span: 0..1,
-        },
-        slice: "5",
-    },
-    T {
-        token: Token {
-            token_kind: LT,
-            line: 0,
-            span: 2..3,
-        },
-        slice: "<",
-    },
-    T {
-        token: Token {
-            token_kind: Int(
-                "10",
-            ),
-            line: 0,
-            span: 4..6,
-        },
-        slice: "10",
-    },
-    T {
-        token: Token {
-            token_kind: GT,
-            line: 0,
-            span: 7..8,
-        },
-        slice: ">",
-    },
-    T {
-        token: Token {
-            token_kind: Int(
-                "5",
-            ),
-            line: 0,
-            span: 9..10,
-        },
-        slice: "5",
-    },
-    T {
-        token: Token {
-            token_kind: Semicolon,
-            line: 0,
-            span: 10..11,
-        },
-        slice: ";",
-    },
-    T {
-        token: Token {
-            token_kind: Eof,
-            line: 0,
-            span: 11..11,
-        },
-        slice: "",
-    },
+    Token(token: '5', slice: '5'),
+    Token(token: '<', slice: '<'),
+    Token(token: '10', slice: '10'),
+    Token(token: '>', slice: '>'),
+    Token(token: '5', slice: '5'),
+    Token(token: ';', slice: ';'),
+    Token(token: 'EOF', slice: ''),
 ]

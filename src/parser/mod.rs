@@ -6,28 +6,15 @@ mod test;
 pub use precedence::Precedence;
 
 use crate::ast::*;
+use crate::errors::{ParserError, Result};
 use crate::lexer::{Lexer, Token, TokenKind};
-
-fn expected_token_not_found_err<T: AsRef<TokenKind>>(token: T) -> anyhow::Error {
-    anyhow::anyhow!("Expected current token {:?} not found", token.as_ref())
-}
-
-fn unexpected_missing_token(expected: Option<TokenKind>) -> anyhow::Error {
-    if let Some(token_kind) = expected {
-        anyhow::anyhow!(
-            "Unexpectedly missing token. Expected token kind {:?}",
-            token_kind
-        )
-    } else {
-        anyhow::anyhow!("Unexpectedly missing token.")
-    }
-}
 
 #[derive(Debug)]
 pub struct Parser {
     lexer: Lexer,
-    current_token: Option<Token>,
-    peek_token: Option<Token>,
+    // prev_token: Option<Token>,
+    current_token: Option<Result<Token>>,
+    peek_token: Option<Result<Token>>,
 }
 
 impl Parser {
@@ -36,48 +23,43 @@ impl Parser {
         let peek_token = lexer.next();
         Self {
             lexer,
+            // prev_token: None,
             current_token,
             peek_token,
         }
     }
 
-    pub fn parse_programe(&mut self) -> anyhow::Result<Program> {
+    pub fn parse_programe(&mut self) -> Result<Program> {
         let mut program = Program::default();
-        while !self.current_token_is(TokenKind::Eof) {
+        while !self.current_token_is(TokenKind::Eof)? {
             program.statements.push(self.parse_statement()?);
             self.next_token();
         }
         Ok(program)
     }
 
-    pub fn current_token_is<T: AsRef<TokenKind>>(&self, match_token: T) -> bool {
-        if let Some(token) = &self.current_token {
-            *token.kind() == *match_token.as_ref()
-        } else {
-            false
+    pub fn current_token_is<T: AsRef<TokenKind>>(&self, match_token: T) -> Result<bool> {
+        Ok(*match_token.as_ref() == **self.current_token()?)
+    }
+
+    pub fn peek_token_is<T: AsRef<TokenKind>>(&self, match_token: T) -> Result<bool> {
+        Ok(*match_token.as_ref() == **self.peek_token()?)
+    }
+
+    pub fn current_token(&self) -> Result<&Token> {
+        match &self.current_token {
+            Some(Ok(token)) => Ok(token),
+            Some(Err(err)) => Err(err.clone()),
+            None => todo!("return UnexpectedEOF with prev_token span"),
         }
     }
 
-    pub fn peek_token_is<T: AsRef<TokenKind>>(&self, match_token: T) -> bool {
-        if let Some(token) = &self.peek_token {
-            *token.kind() == *match_token.as_ref()
-        } else {
-            false
+    pub fn peek_token(&self) -> Result<&Token> {
+        match &self.peek_token {
+            Some(Ok(token)) => Ok(token),
+            Some(Err(err)) => Err(err.clone()),
+            None => Err(self.current_token()?.map(ParserError::UnexpectedEOF.into())),
         }
-    }
-
-    pub fn current_token(&self) -> anyhow::Result<&Token> {
-        if self.current_token.is_none() {
-            return Err(unexpected_missing_token(None));
-        }
-        Ok(self.current_token.as_ref().unwrap())
-    }
-
-    pub fn peek_token(&self) -> anyhow::Result<&Token> {
-        if self.peek_token.is_none() {
-            return Err(unexpected_missing_token(None));
-        }
-        Ok(self.peek_token.as_ref().unwrap())
     }
 
     pub fn next_token(&mut self) {
@@ -85,46 +67,52 @@ impl Parser {
         self.peek_token = self.lexer.next();
     }
 
-    fn expect_current<T: AsRef<TokenKind>>(&mut self, token: T) -> anyhow::Result<Token> {
-        if self.current_token_is(&token) {
+    fn expect_current<T: AsRef<TokenKind>>(&mut self, token: T) -> Result<Token> {
+        if self.current_token_is(&token)? {
             self.next_token();
             Ok(self.current_token()?.clone())
         } else {
-            Err(expected_token_not_found_err(token))
+            Err(self
+                .current_token()?
+                .map(ParserError::ExpectedTokenNotFound(token.as_ref().to_string()).into()))
         }
     }
 
-    pub fn expect_peek<T: AsRef<TokenKind>>(&mut self, token: T) -> anyhow::Result<Token> {
-        if self.peek_token_is(&token) {
+    pub fn expect_peek<T: AsRef<TokenKind>>(&mut self, token: T) -> Result<Token> {
+        if self.peek_token_is(&token)? {
             self.next_token();
             Ok(self.current_token()?.clone())
         } else {
-            Err(expected_token_not_found_err(token))
+            Err(self
+                .peek_token()?
+                .map(ParserError::ExpectedTokenNotFound(token.as_ref().to_string()).into()))
         }
     }
 
     pub fn eat_semicolons(&mut self) {
-        while self.peek_token_is(TokenKind::Semicolon) {
+        while self.peek_token_is(TokenKind::Semicolon).unwrap_or(false) {
             self.next_token();
         }
     }
 
     pub fn eat_comma(&mut self) {
-        if self.current_token_is(TokenKind::Comma) {
+        if self.current_token_is(TokenKind::Comma).unwrap_or(false) {
             self.next_token();
         }
     }
 
-    pub fn current_precedence(&self) -> anyhow::Result<Precedence> {
-        Ok(self.current_token()?.kind().into())
+    pub fn current_precedence(&self) -> Result<Precedence> {
+        let token = &**self.current_token()?;
+        Ok(token.into())
     }
 
-    pub fn peek_precedence(&self) -> anyhow::Result<Precedence> {
-        Ok(self.peek_token()?.kind().into())
+    pub fn peek_precedence(&self) -> Result<Precedence> {
+        let token = &**self.peek_token()?;
+        Ok(token.into())
     }
 
-    fn parse_statement(&mut self) -> anyhow::Result<Statement> {
-        match self.current_token()?.kind() {
+    fn parse_statement(&mut self) -> Result<Statement> {
+        match **self.current_token()? {
             TokenKind::Let => self.parse_let(),
             TokenKind::Return => self.parse_return(),
             _ => Ok(Statement::ExpressionStatement(
@@ -133,7 +121,7 @@ impl Parser {
         }
     }
 
-    fn parse_let(&mut self) -> anyhow::Result<Statement> {
+    fn parse_let(&mut self) -> Result<Statement> {
         let let_token = self.expect_current(TokenKind::Let)?;
         let name = self.parse_identifer()?;
         self.expect_peek(TokenKind::Assign)?;
@@ -143,18 +131,20 @@ impl Parser {
         Ok(Statement::Let(Let::new(let_token, name, value)))
     }
 
-    fn parse_return(&mut self) -> anyhow::Result<Statement> {
+    fn parse_return(&mut self) -> Result<Statement> {
         let ret_token = self.expect_current(TokenKind::Return)?;
         let value = self.parse_expression(Precedence::Lowest)?;
         self.eat_semicolons();
         Ok(Statement::Return(Return::new(ret_token, value)))
     }
 
-    fn parse_block(&mut self) -> anyhow::Result<Block> {
+    fn parse_block(&mut self) -> Result<Block> {
         let block_token = self.expect_current(TokenKind::LBrace)?;
 
         let mut statements = Vec::new();
-        while !self.current_token_is(TokenKind::RBrace) && !self.current_token_is(TokenKind::Eof) {
+        while !self.current_token_is(TokenKind::RBrace)?
+            && !self.current_token_is(TokenKind::Eof)?
+        {
             statements.push(self.parse_statement()?);
             self.next_token();
         }
@@ -162,11 +152,11 @@ impl Parser {
         Ok(Block::new(block_token, statements))
     }
 
-    fn parse_expression(&mut self, precedence: Precedence) -> anyhow::Result<Expression> {
+    fn parse_expression(&mut self, precedence: Precedence) -> Result<Expression> {
         use {Expression as Expr, TokenKind as T};
 
         let token = self.current_token()?;
-        let mut expr = match token.kind() {
+        let mut expr = match **token {
             T::Int(_) | T::True | T::False | T::Nil => Expr::Primative(self.parse_primative()?),
             T::Str(_) => Expr::StringLiteral(self.parse_string_literal()?),
             T::Identifier(_) => Expr::Identifier(self.parse_identifer()?),
@@ -176,11 +166,14 @@ impl Parser {
             T::Function => Expr::Function(self.parse_function()?),
             T::LBracket => Expr::Array(self.parse_array()?),
             T::LBrace => Expr::Hash(self.parse_hash()?),
-            token => return Err(anyhow::anyhow!("Unexpected token: {}", token)),
+            _ => {
+                return Err(token.map(ParserError::UnexpectedToken(token.to_string()).into()));
+            }
         };
 
         while precedence < self.peek_precedence()? {
-            expr = match self.peek_token()?.kind() {
+            let peek_token = self.peek_token()?;
+            expr = match **peek_token {
                 T::Assign
                 | T::Plus
                 | T::Minus
@@ -193,7 +186,11 @@ impl Parser {
                 | T::Eof => Expr::Infix(self.parse_infix(expr)?),
                 T::LParen => Expr::Call(self.parse_call(expr)?),
                 T::LBracket => Expr::Index(self.parse_index(expr)?),
-                token => return Err(anyhow::anyhow!("Unexpected token: {}", token)),
+                _ => {
+                    return Err(
+                        peek_token.map(ParserError::UnexpectedToken(peek_token.to_string()).into())
+                    );
+                }
             };
         }
 
@@ -201,29 +198,29 @@ impl Parser {
         Ok(expr)
     }
 
-    fn parse_primative(&mut self) -> anyhow::Result<Primative> {
+    fn parse_primative(&mut self) -> Result<Primative> {
         let prim_token = self.current_token()?.clone();
         Primative::try_from(prim_token)
     }
 
-    fn parse_string_literal(&mut self) -> anyhow::Result<StringLiteral> {
+    fn parse_string_literal(&mut self) -> Result<StringLiteral> {
         let str_token = self.current_token()?.clone();
         Ok(StringLiteral::from(str_token))
     }
 
-    fn parse_identifer(&mut self) -> anyhow::Result<Identifier> {
-        let ident_token = self.current_token.take().unwrap();
+    fn parse_identifer(&mut self) -> Result<Identifier> {
+        let ident_token = self.current_token.take().unwrap()?;
         Ok(Identifier::new(ident_token))
     }
 
-    fn parse_prefix(&mut self) -> anyhow::Result<Prefix> {
+    fn parse_prefix(&mut self) -> Result<Prefix> {
         let op_token = self.current_token()?.clone();
         self.next_token();
         let right = self.parse_expression(Precedence::Prefix)?;
         Ok(Prefix::new(op_token, right))
     }
 
-    fn parse_infix(&mut self, left: Expression) -> anyhow::Result<Infix> {
+    fn parse_infix(&mut self, left: Expression) -> Result<Infix> {
         self.next_token();
         let op_token = self.current_token()?.clone();
         let op_precedence = self.current_precedence()?;
@@ -233,7 +230,7 @@ impl Parser {
         Ok(Infix::new(op_token, left, right))
     }
 
-    fn parse_if(&mut self) -> anyhow::Result<If> {
+    fn parse_if(&mut self) -> Result<If> {
         let if_token = self.expect_current(TokenKind::If)?;
         self.expect_current(TokenKind::LParen)?;
 
@@ -244,7 +241,7 @@ impl Parser {
         let consequence = self.parse_block()?;
 
         let mut alternative = None;
-        if self.peek_token_is(TokenKind::Else) {
+        if self.peek_token_is(TokenKind::Else)? {
             self.next_token();
             self.expect_peek(TokenKind::LBrace)?;
             alternative = Some(self.parse_block()?);
@@ -253,19 +250,19 @@ impl Parser {
         Ok(If::new(if_token, condition, consequence, alternative))
     }
 
-    fn parse_grouped(&mut self) -> anyhow::Result<Expression> {
+    fn parse_grouped(&mut self) -> Result<Expression> {
         self.expect_current(TokenKind::LParen)?;
         let expr = self.parse_expression(Precedence::Lowest)?;
         self.expect_peek(TokenKind::RParen)?;
         Ok(expr)
     }
 
-    fn parse_function(&mut self) -> anyhow::Result<Function> {
+    fn parse_function(&mut self) -> Result<Function> {
         let fn_token = self.expect_current(TokenKind::Function)?;
         self.expect_current(TokenKind::LParen)?;
 
         let mut params = Vec::new();
-        while !self.current_token_is(TokenKind::RParen) {
+        while !self.current_token_is(TokenKind::RParen)? {
             params.push(self.parse_identifer()?);
             self.next_token();
             self.eat_comma();
@@ -276,11 +273,11 @@ impl Parser {
         Ok(Function::new(fn_token, params, body))
     }
 
-    fn parse_array(&mut self) -> anyhow::Result<Vec<Expression>> {
+    fn parse_array(&mut self) -> Result<Vec<Expression>> {
         self.expect_current(TokenKind::LBracket)?;
 
         let mut elems = Vec::new();
-        while !self.current_token_is(TokenKind::RBracket) {
+        while !self.current_token_is(TokenKind::RBracket)? {
             elems.push(self.parse_expression(Precedence::Lowest)?);
             self.next_token();
             self.eat_comma();
@@ -289,12 +286,12 @@ impl Parser {
         Ok(elems)
     }
 
-    fn parse_hash(&mut self) -> anyhow::Result<Hash> {
+    fn parse_hash(&mut self) -> Result<Hash> {
         let hash_token = self.expect_current(TokenKind::LBrace)?;
 
         let mut keys = Vec::new();
         let mut values = Vec::new();
-        while !self.current_token_is(TokenKind::RBrace) {
+        while !self.current_token_is(TokenKind::RBrace)? {
             keys.push(self.parse_expression(Precedence::Lowest)?);
             self.expect_peek(TokenKind::Colon)?;
             self.next_token();
@@ -306,12 +303,12 @@ impl Parser {
         Ok(Hash::new(hash_token, keys, values))
     }
 
-    fn parse_call(&mut self, func: Expression) -> anyhow::Result<Call> {
+    fn parse_call(&mut self, func: Expression) -> Result<Call> {
         let call_token = self.expect_peek(TokenKind::LParen)?;
         self.next_token();
 
         let mut args = Vec::new();
-        while !self.current_token_is(TokenKind::RParen) {
+        while !self.current_token_is(TokenKind::RParen)? {
             args.push(self.parse_expression(Precedence::Lowest)?);
             self.next_token();
             self.eat_comma();
@@ -320,7 +317,7 @@ impl Parser {
         Ok(Call::new(call_token, func, args))
     }
 
-    fn parse_index(&mut self, left: Expression) -> anyhow::Result<Index> {
+    fn parse_index(&mut self, left: Expression) -> Result<Index> {
         let idx_token = self.expect_peek(TokenKind::LBracket)?;
         self.next_token();
 

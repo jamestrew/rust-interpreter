@@ -1,39 +1,8 @@
-use std::ops::Range;
 use std::rc::Rc;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Token {
-    pub token_kind: TokenKind,
-    pub line: usize,
-    pub span: Range<usize>,
-}
+use crate::types::Spanned;
 
-impl Token {
-    pub fn new(token_kind: TokenKind, line: usize, span: Range<usize>) -> Token {
-        let span_start = span.start;
-        let mut span_end = span.end;
-        if token_kind == TokenKind::Eof {
-            span_end = span_start;
-        }
-        Self {
-            token_kind,
-            line,
-            span: span_start..span_end,
-        }
-    }
-
-    pub fn kind(&self) -> &TokenKind {
-        &self.token_kind
-    }
-
-    pub fn start(&self) -> usize {
-        self.span.start
-    }
-
-    pub fn end(&self) -> usize {
-        self.span.end
-    }
-}
+pub type Token = Spanned<TokenKind>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TokenKind {

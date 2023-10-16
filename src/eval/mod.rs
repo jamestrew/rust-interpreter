@@ -22,7 +22,7 @@ pub fn eval(input: &str, env: &Env) -> Option<String> {
     let mut parser = Parser::new(lexer);
     let program = match parser.parse_programe() {
         Ok(prog) => prog,
-        Err(err) => return Some(format!("Syntax error: {}", err)),
+        Err(err) => return Some(format!("Syntax error: {}", *err)),
     };
 
     match eval_program(&program, env).as_ref() {

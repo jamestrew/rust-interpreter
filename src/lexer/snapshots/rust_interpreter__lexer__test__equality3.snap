@@ -1,51 +1,12 @@
 ---
-source: src/lexer/mod.rs
+source: src/lexer/test.rs
 description: 10 != 9;
 expression: "debug_print(\"10 != 9;\", tokens)"
 ---
 [
-    T {
-        token: Token {
-            token_kind: Int(
-                "10",
-            ),
-            line: 0,
-            span: 0..2,
-        },
-        slice: "10",
-    },
-    T {
-        token: Token {
-            token_kind: NotEqual,
-            line: 0,
-            span: 3..5,
-        },
-        slice: "!=",
-    },
-    T {
-        token: Token {
-            token_kind: Int(
-                "9",
-            ),
-            line: 0,
-            span: 6..7,
-        },
-        slice: "9",
-    },
-    T {
-        token: Token {
-            token_kind: Semicolon,
-            line: 0,
-            span: 7..8,
-        },
-        slice: ";",
-    },
-    T {
-        token: Token {
-            token_kind: Eof,
-            line: 0,
-            span: 8..8,
-        },
-        slice: "",
-    },
+    Token(token: '10', slice: '10'),
+    Token(token: '!=', slice: '!='),
+    Token(token: '9', slice: '9'),
+    Token(token: ';', slice: ';'),
+    Token(token: 'EOF', slice: ''),
 ]

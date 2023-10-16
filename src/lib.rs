@@ -2,6 +2,8 @@ mod ast;
 pub mod eval;
 pub mod lexer;
 pub mod parser;
+mod errors;
+mod types;
 
 use ast::Statement;
 pub use eval::*;

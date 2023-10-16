@@ -1,59 +1,13 @@
 ---
-source: src/lexer/mod.rs
+source: src/lexer/test.rs
 description: let five = 5;
 expression: "debug_print(\"let five = 5;\", tokens)"
 ---
 [
-    T {
-        token: Token {
-            token_kind: Let,
-            line: 0,
-            span: 0..3,
-        },
-        slice: "let",
-    },
-    T {
-        token: Token {
-            token_kind: Identifier(
-                "five",
-            ),
-            line: 0,
-            span: 4..8,
-        },
-        slice: "five",
-    },
-    T {
-        token: Token {
-            token_kind: Assign,
-            line: 0,
-            span: 9..10,
-        },
-        slice: "=",
-    },
-    T {
-        token: Token {
-            token_kind: Int(
-                "5",
-            ),
-            line: 0,
-            span: 11..12,
-        },
-        slice: "5",
-    },
-    T {
-        token: Token {
-            token_kind: Semicolon,
-            line: 0,
-            span: 12..13,
-        },
-        slice: ";",
-    },
-    T {
-        token: Token {
-            token_kind: Eof,
-            line: 0,
-            span: 13..13,
-        },
-        slice: "",
-    },
+    Token(token: 'let', slice: 'let'),
+    Token(token: 'five', slice: 'five'),
+    Token(token: '=', slice: '='),
+    Token(token: '5', slice: '5'),
+    Token(token: ';', slice: ';'),
+    Token(token: 'EOF', slice: ''),
 ]
